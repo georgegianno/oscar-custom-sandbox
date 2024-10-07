@@ -37,4 +37,4 @@ sandbox:
 	pip install --upgrade pip 
 	pip install -r requirements.txt
 	@echo "Running sandbox setup..."
-	@echo "export PYTHONPATH=$(PWD)/src:\$$PYTHONPATH"
+	export PYTHONPATH=$(PWD)/src:\$$PYTHONPATH
