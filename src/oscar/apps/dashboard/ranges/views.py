@@ -162,6 +162,13 @@ class RangeProductListView(BulkEditMixin, ListView):
 
     def get_queryset(self):
         products = self.get_product_range().all_products()
+        search_title = self.request.GET.get('search_title')
+        search_parents = self.request.GET.get('search_parents')
+        print(self.request.GET)
+        if search_title:
+            products = products.filter(title__icontains=search_title)
+        if search_parents=='on':
+            products = products.exclude(structure='child')
         return products.order_by("rangeproduct__display_order")
 
     def get_context_data(self, **kwargs):
