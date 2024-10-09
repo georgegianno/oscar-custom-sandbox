@@ -103,13 +103,15 @@ class Favorite(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="favorites",  # Changed from "addresses" to "favorites"
+        related_name="favorites",
         verbose_name=_("User"),
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'product')  # Ensures user-product combination is unique
+        unique_together = ('user', 'product')
 
     def __str__(self):
         return f"{self.user} - {self.product}"
+    
+    __all__.append("Favorite")

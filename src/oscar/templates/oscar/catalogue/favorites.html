@@ -1,0 +1,24 @@
+{% extends "oscar/catalogue/browse.html" %}
+{% load i18n thumbnail image_tags %}
+
+{% block content %}
+    {% if favorite_products %}
+        <section>
+            <div>
+                <ol class="row list-unstyled ml-0 pl-0">
+                      {% for product in favorite_products %}
+                          <li class="col-sm-6 col-md-4 col-lg-3">
+                            <article>
+                                {% include "oscar/catalogue/partials/product.html" with product=product %}
+                            </article>
+                        </li>
+                      {% endfor %}
+                </ol>
+                {% include "oscar/partials/pagination.html" %}
+            </div>
+        </section>
+    {% else %}
+        <p class="nonefound">{% trans "No products found." %}</p>
+    {% endif %}
+{% endblock content %}
+

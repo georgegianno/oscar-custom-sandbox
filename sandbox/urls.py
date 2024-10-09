@@ -8,7 +8,7 @@ from django.contrib.sitemaps import views
 from django.urls import include, path
 from oscar.views import handler403, handler404, handler500
 from oscar.apps.basket.views import set_line_quantity_ajax
-from oscar.apps.catalogue.views import favorites_add_or_remove
+from oscar.apps.catalogue.views import favorites_add_or_remove, favorite_products
 
 from apps.sitemaps import base_sitemaps
 
@@ -35,12 +35,12 @@ urlpatterns = [
         name='favorites',
     ),
     path('select2/', include('django_select2.urls')),
-    
 ]
 
 # Prefix Oscar URLs with language codes
 urlpatterns += i18n_patterns(
     path('', include(apps.get_app_config('oscar').urls[0])),
+    path('favorite-products/', favorite_products, name='favorite-products'),
 )
 
 if settings.DEBUG:

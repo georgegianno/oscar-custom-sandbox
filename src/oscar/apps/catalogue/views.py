@@ -10,6 +10,8 @@ from oscar.core.compat import get_user_model
 from oscar.core.utils import is_ajax
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.db.models import Q
+
 
 
 User = get_user_model()
@@ -141,6 +143,20 @@ def favorites_add_or_remove(request, product_pk):
     if is_ajax(request):
         return JsonResponse(data)
     return render(request, 'oscar/catalogue/partials/add_to_basket_form.html', {'product': product})
+
+def category_occurencies_map(queryset):
+    a = list(queryset.exclude(product__categories=None).values_list('product__categories', flat=True).distinct())
+    b = list(queryset.exclude(product__parent__categories=None).values_list('product__parent__categories', flat=True).distinct())
+    a.extend(b)
+    c = a
+    map = {id: queryset.filter(Q(product__categories__id=id) | Q(product__parent__categories__id=id)).distinct().count() for id in c} 
+    return sorted(map.keys(), key=lambda x: map[x], reverse=True)
+
+def favorite_products(request):
+    user = request.user
+    products = Product.objects.filter(id__in=Favorite.objects.filter(user=user) \
+        .values_list('product_id', flat=True))
+    return render(request, 'oscar/catalogue/favorites.html', {'favorite_products': products})
 
 # Import catalogue and category view from search app
 CatalogueView = get_class("search.views", "CatalogueView")

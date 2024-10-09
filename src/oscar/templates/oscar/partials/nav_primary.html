@@ -52,24 +52,34 @@
                             </div>
                         </li>
                         {% if user.is_authenticated %}
-                            {% get_recommended_products request as recommended_products %}
+                        <a class="nav-link" href="{% url 'favorite-products' %}">
+                            {% trans "Favorite products" %}
+                        </a>
+                        <li class="nav-item dropdown">
+                        </li>
                             <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {% trans "Recommended products" %}
-                            </a>
-                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                {% if recommended_products %}
-                                    <div class="dropdown-divider"></div>
-                                    {% for product in recommended_products %}
-                                        <a class="dropdown-item" href="{{ product.get_absolute_url }}">{{ product.title }}</a>
-                                    {% endfor %}
-                                {% endif %}
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    {% trans "Recommended products" %}
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    {% get_recommended_products request as recommended_products %}
+                                    {% if recommended_products and recommended_products|length > 0 %}
+                                        {% for product in recommended_products %}
+                                            <a class="dropdown-item" href="{{ product.get_absolute_url }}">
+                                                {% if product.is_child %}
+                                                    {{ product.parent.title }}
+                                                {% else %}
+                                                    {{ product.title }}
+                                                {% endif %}
+                                            </a>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
                             </li>
                         {% endif %}
                     {% endblock %} 
                 </ul>                  
             {% endblock %}
-
             {% block nav_extra %}
                 {% include "oscar/partials/search.html" %}
             {% endblock %}
