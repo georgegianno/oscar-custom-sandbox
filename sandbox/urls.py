@@ -8,6 +8,7 @@ from django.contrib.sitemaps import views
 from django.urls import include, path
 from oscar.views import handler403, handler404, handler500
 from oscar.apps.basket.views import set_line_quantity_ajax
+from oscar.apps.catalogue.views import favorites_add_or_remove
 
 from apps.sitemaps import base_sitemaps
 
@@ -29,6 +30,9 @@ urlpatterns = [
         name='django.contrib.sitemaps.views.sitemap'),
     path('quantity/set/<int:id>/<int:quantity>/', set_line_quantity_ajax,
         name='set-quantity',
+    ),
+    path('favorites/<int:product_pk>/', favorites_add_or_remove,
+        name='favorites',
     ),
     path('select2/', include('django_select2.urls')),
 ]

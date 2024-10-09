@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (basketAddForms) {
         _addToBasket(basketAddForms)
     }
+    var favoriteLinks = document.querySelectorAll('a[data-favorite-product]')
+    if (favoriteLinks) {
+        console.log(favoriteLinks)
+        addOrRemoveFavorites(favoriteLinks)
+    }
 })
 
 function getCsrf() {
@@ -159,7 +164,7 @@ function displaySuccessMessage(message) {
     successMessageContainer.style.fontSize = '25px' 
     setTimeout(() => {
         document.body.removeChild(successMessageContainer)
-    }, 2000) 
+    }, 1200) 
 }
 
 function setQuantityListeners(elements) {
@@ -184,6 +189,43 @@ function setRemoveListeners(elements) {
             if (basketLine && lineId) {
                 _updateCartQuantity(lineId, 0) 
             } 
+        })
+    })
+}
+
+function addOrRemoveFavorites(links) {
+    links.forEach(function(link) {
+        link.addEventListener('click', function(event) {
+            event.preventDefault()
+            var csrfToken = getCsrf()
+            url = link.href
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was:' + response.statusText)
+                }
+                return response.json()
+            })
+            .then(data => {
+                console.log(data)
+                var successMessage = data['success_message']
+                var displayText = data['display_text']
+                if (successMessage) {
+                    displaySuccessMessage(successMessage)
+                if (displayText) {
+                    link.textContent = displayText 
+                }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error)
+            })
         })
     })
 }
