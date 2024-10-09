@@ -35,6 +35,7 @@ urlpatterns = [
         name='favorites',
     ),
     path('select2/', include('django_select2.urls')),
+    
 ]
 
 # Prefix Oscar URLs with language codes
