@@ -965,7 +965,7 @@ class AbstractRange(models.Model):
     slug = fields.AutoSlugField(
         _("Slug"), max_length=128, unique=True, populate_from="name"
     )
-    parents_only = models.BooleanField(default=False)
+    parents_only = models.BooleanField(_("Standalone and parents only"), default=False)
     description = models.TextField(_("Description"), blank=True)
 
     # Whether this range is public
