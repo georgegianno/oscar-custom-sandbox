@@ -5,6 +5,8 @@ Vanilla product models
 """
 from oscar.apps.catalogue.abstract_models import *
 from oscar.core.loading import is_model_registered
+from django.utils.translation import gettext_lazy as _
+from oscar.core.compat import AUTH_USER_MODEL
 
 __all__ = ["ProductAttributesContainer"]
 
@@ -95,3 +97,19 @@ if not is_model_registered("catalogue", "ProductImage"):
         pass
 
     __all__.append("ProductImage")
+
+class Favorite(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="favorites",  # Changed from "addresses" to "favorites"
+        verbose_name=_("User"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'product')  # Ensures user-product combination is unique
+
+    def __str__(self):
+        return f"{self.user} - {self.product}"

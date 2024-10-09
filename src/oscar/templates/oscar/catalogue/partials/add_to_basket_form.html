@@ -1,7 +1,7 @@
 {% load basket_tags %}
 {% load display_tags %}
 {% load i18n %}
-{% load purchase_info_tags %}
+{% load purchase_info_tags product_tags %}
 
 {% purchase_info_for_product request product as session %}
 
@@ -30,3 +30,16 @@
         {% include "oscar/catalogue/partials/add_to_wishlist.html" %}
     {% endiffeature %}
 {% endif %}
+<br>
+{% if user.is_authenticated %}
+    <a href="{% url 'favorites' product_pk=product.pk %}"
+        data-favorite-product="{{product.pk}}">
+        {% is_in_favorites request product.pk as is_in_favorites %}
+        {% if is_in_favorites %}
+            {% trans "Remove from favorites" %}
+        {% else %}
+            {% trans "Add to favorites" %}
+        {% endif %}
+    </a>
+{% endif %}
+

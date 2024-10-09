@@ -6,11 +6,18 @@ from django.views.generic import DetailView
 
 from oscar.apps.catalogue.signals import product_viewed
 from oscar.core.loading import get_class, get_model
+from oscar.core.compat import get_user_model
+from oscar.core.utils import is_ajax
+from django.shortcuts import render
+from django.http import JsonResponse
 
+
+User = get_user_model()
 Product = get_model("catalogue", "product")
 Category = get_model("catalogue", "category")
 ProductAlert = get_model("customer", "ProductAlert")
 ProductAlertForm = get_class("customer.forms", "ProductAlertForm")
+Favorite = get_model("catalogue", "Favorite")
 
 
 class ProductDetailView(DetailView):
@@ -115,6 +122,25 @@ class ProductDetailView(DetailView):
             "oscar/%s/detail.html" % self.template_folder,
         ]
 
+def favorites_add_or_remove(request, product_pk):
+    user = User.objects.get(id=request.user.id)
+    product = Product.objects.get(pk=product_pk)
+    favorite_exists = Favorite.objects.filter(user=user, product=product)
+    data={}
+    title = product.parent.title if product.structure =='child' else product.title
+    if not favorite_exists:
+        Favorite.objects.create(user=user, product=product)
+        data['added'] = True
+        data['success_message'] = title + _(" was added to your favorites")
+        data['display_text'] = _('Remove from favorites')
+    else:
+        Favorite.objects.filter(user=user, product=product).delete()
+        data['removed'] = True
+        data['success_message'] = title + _(" was removed from your favorites")
+        data['display_text'] = _('Add to favorites')
+    if is_ajax(request):
+        return JsonResponse(data)
+    return render(request, 'oscar/catalogue/partials/add_to_basket_form.html', {'product': product})
 
 # Import catalogue and category view from search app
 CatalogueView = get_class("search.views", "CatalogueView")
