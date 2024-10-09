@@ -52,20 +52,21 @@ def is_in_favorites(request, pk):
 def get_recommended_products(request):
     user = request.user
     user_favorites = Favorite.objects.filter(user=user)
-    products = Product.objects.exclude(id__in=user_favorites.values_list('product_id',flat=True))
-    categories = category_occurencies_map(user_favorites)[:2][::-1]
-    latest_two = user_favorites.order_by('-created_at')[:2]
-    latest = user_favorites.filter(id__in=latest_two)
-    latest = category_occurencies_map(latest)[:2]
-    latest.extend(categories)
-    latest.append(latest[-1])
     recommended_products = []
-    for id in latest:
-        recommended = products.filter(Q(categories__id=id) | Q(parent__categories__id=id)). \
-            exclude(id__in=[x.id for x in recommended_products])
-        try:
-            random_index = random.randint(0, recommended.count() - 1)
-            recommended_products.append(recommended[random_index])
-        except Exception as e:
-            pass
+    if user_favorites:
+        products = Product.objects.exclude(id__in=user_favorites.values_list('product_id',flat=True))
+        categories = category_occurencies_map(user_favorites)[:2][::-1]
+        latest_two = user_favorites.order_by('-created_at')[:2]
+        latest = user_favorites.filter(id__in=latest_two)
+        latest = category_occurencies_map(latest)[:2]
+        latest.extend(categories)
+        latest.append(latest[-1])
+        for id in latest:
+            recommended = products.filter(Q(categories__id=id) | Q(parent__categories__id=id)). \
+                exclude(id__in=[x.id for x in recommended_products])
+            try:
+                random_index = random.randint(0, recommended.count() - 1)
+                recommended_products.append(recommended[random_index])
+            except Exception as e:
+                pass
     return recommended_products 

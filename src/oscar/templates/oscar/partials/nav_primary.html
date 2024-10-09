@@ -52,30 +52,31 @@
                             </div>
                         </li>
                         {% if user.is_authenticated %}
-                        <a class="nav-link" href="{% url 'favorite-products' %}">
-                            {% trans "Favorite products" %}
-                        </a>
-                        <li class="nav-item dropdown">
-                        </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    {% trans "Recommended products" %}
-                                </a>
-                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    {% get_recommended_products request as recommended_products %}
-                                    {% if recommended_products and recommended_products|length > 0 %}
-                                        {% for product in recommended_products %}
-                                            <a class="dropdown-item" href="{{ product.get_absolute_url }}">
-                                                {% if product.is_child %}
-                                                    {{ product.parent.title }}
-                                                {% else %}
-                                                    {{ product.title }}
-                                                {% endif %}
-                                            </a>
-                                        {% endfor %}
-                                    {% endif %}
-                                </div>
-                            </li>
+                            {% get_recommended_products request as recommended_products %}
+                            {% if recommended_products and recommended_products|length > 0 %}
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        {% trans "Recommended products" %}
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                        {% get_recommended_products request as recommended_products %}
+                                        {% if recommended_products %}
+                                            {% for product in recommended_products %}
+                                                <a class="dropdown-item" href="{{ product.get_absolute_url }}">
+                                                    {% if product.is_child %}
+                                                        {{ product.parent.title }}
+                                                    {% else %}
+                                                        {{ product.title }}
+                                                    {% endif %}
+                                                </a>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </li>
+                            {% endif %}
+                            <a class="nav-link" href="{% url 'favorite-products' %}">
+                                {% trans "Favorite products" %}
+                            </a>
                         {% endif %}
                     {% endblock %} 
                 </ul>                  
