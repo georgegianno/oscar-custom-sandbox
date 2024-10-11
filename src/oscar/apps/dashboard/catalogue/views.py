@@ -9,9 +9,11 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views import generic
 from django_tables2 import SingleTableMixin, SingleTableView
-
+from django.views.generic import DetailView
 from oscar.core.loading import get_class, get_classes, get_model
 from oscar.views.generic import ObjectLookupView
+import json
+from django.db import transaction
 
 (
     ProductForm,
@@ -1067,3 +1069,43 @@ class OptionDeleteView(PopUpWindowDeleteMixin, generic.DeleteView):
     def get_success_url(self):
         self.add_success_message(_("Option deleted successfully"))
         return reverse("dashboard:catalogue-option-list")
+    
+class CategoryOrderingView(DetailView):
+    template_name = 'oscar/dashboard/catalogue/category_ordering.html'
+    model = Category
+    context_object_name = 'category'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category = self.get_object()
+        descendants = category.get_descendants()
+        if len(descendants) > 0:
+            category_products = category.product_set.values_list('id',flat=True)
+            for descendant in descendants:
+                products = descendant.product_set. \
+                    exclude(id__in=category_products)
+                if products:
+                    print([
+                            ProductCategory(category=category, product=product) 
+                            for product in products
+                        ])
+                    with transaction.atomic():
+                        product_category_mappings = [
+                            ProductCategory(category=category, product=product) 
+                            for product in products
+                        ]
+                        ProductCategory.objects.bulk_create(product_category_mappings)
+        context['objects'] = ProductCategory.objects.filter(category=category).order_by('display_order')
+        return context
+    
+def save_category_order(request, pk):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        order = data.get('order')
+        with transaction.atomic():
+            for index, key in enumerate(order):
+                object = ProductCategory.objects.get(category__id=pk, product__id=key)
+                object.display_order=index
+                object.save()
+    success_url = reverse('dashboard:catalogue-category-update', kwargs={'pk':pk})
+    return HttpResponseRedirect(success_url)

@@ -342,12 +342,11 @@ class AbstractProductCategory(models.Model):
     category = models.ForeignKey(
         "catalogue.Category", on_delete=models.CASCADE, verbose_name=_("Category")
     )
-
+    display_order = models.IntegerField(blank=True, default=0, null=True)
     class Meta:
         abstract = True
         app_label = "catalogue"
         ordering = ["product", "category"]
-        unique_together = ("product", "category")
         verbose_name = _("Product category")
         verbose_name_plural = _("Product categories")
 

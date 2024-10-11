@@ -1,0 +1,72 @@
+{% extends 'oscar/dashboard/layout.html' %}
+{% load category_tags %}
+{% load i18n static %}
+
+{% block body_class %}{{ block.super }} catalogue{% endblock %}
+
+{% block title %}
+    {% trans "Categories" %}  | {{ block.super }}
+{% endblock %}
+
+{% block dashboard_content %}
+<h2>Products in {{ category.name }}:</h2>
+<ul id="sortable-products" data-category="{{ category.id }}">
+    {% for object in objects %}
+      <li data-id="{{ object.product.id }}">{{ object.product.title }}</li>
+    {% endfor %}
+  </ul>
+
+<button class="btn btn-primary" id="save-order">Save display order</button>
+<br><br>
+
+{% endblock %}
+
+{% block scripts %}
+    {{ block.super }}     
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <script src="{% static 'sandbox.js' %}"></script>
+    <script>
+        var sortable = new Sortable(document.getElementById('sortable-products'), {
+            animation: 150,
+            onEnd: function (evt) {
+                var order = [];
+                var items = document.querySelectorAll('#sortable-products li')
+                items.forEach(function(item) {
+                    order.push(item.getAttribute('data-id'))
+                });
+                console.log("New Order:", order) 
+            }
+        })
+        document.getElementById('save-order').addEventListener('click', function() {
+            var order = []
+            var category = document.getElementById('sortable-products').getAttribute('data-category')
+            var items = document.querySelectorAll('#sortable-products li')
+            items.forEach(function(item) {
+                order.push(item.getAttribute('data-id')) 
+            })
+            fetch(`{% url 'category-save-order' pk=category.id %}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    category: category,
+                    order: order 
+                })
+            }).then(response => {
+
+                if (response.ok) {
+                    if (response['url']) {
+                        window.location.href = response.url
+                    } else {
+                        displaySuccessMessage('Products ordered successfully')
+                    }
+                } else {
+                    alert("Error saving order:" + response.status)
+                }
+            }) 
+        })
+    </script>
+{% endblock %}
