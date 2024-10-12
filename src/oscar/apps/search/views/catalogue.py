@@ -12,6 +12,7 @@ BrowseCategoryForm = get_class("search.forms", "BrowseCategoryForm")
 CategoryForm = get_class("search.forms", "CategoryForm")
 BaseSearchView = get_class("search.views.base", "BaseSearchView")
 Category = get_model("catalogue", "Category")
+ProductCategory = get_model("catalogue", "ProductCategory")
 
 
 class CatalogueView(BaseSearchView):
@@ -82,7 +83,11 @@ class ProductCategoryView(BaseSearchView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        print(context)
         context["category"] = self.category
+        context["products"] = [x.product for x in  \
+            self.category.productcategory_set. \
+                order_by('display_order') if x.product.is_public is True]
         return context
 
     def get_form_kwargs(self):

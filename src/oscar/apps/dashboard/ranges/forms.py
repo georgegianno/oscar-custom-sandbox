@@ -26,7 +26,7 @@ class RangeForm(forms.ModelForm):
             "included_categories",
         ]
 
-    # We call the super() with commit=False once to give the unsaved m2m instances the _save_m2m
+    # We call the super() with commit=False once to give the unsaved m2m instances the save_m2m
     # method so when save() is called with commit=True the m2m models are saved.  
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -42,6 +42,7 @@ class RangeForm(forms.ModelForm):
                     parents = list(products.filter(structure='parent'))
                     for product in parents:
                         instance.add_product(product)
+            # instance.included_products.clear()
         return instance 
 
 

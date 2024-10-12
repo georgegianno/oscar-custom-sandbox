@@ -1085,10 +1085,6 @@ class CategoryOrderingView(DetailView):
                 products = descendant.product_set. \
                     exclude(id__in=category_products)
                 if products:
-                    print([
-                            ProductCategory(category=category, product=product) 
-                            for product in products
-                        ])
                     with transaction.atomic():
                         product_category_mappings = [
                             ProductCategory(category=category, product=product) 

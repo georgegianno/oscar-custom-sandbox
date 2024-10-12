@@ -20,6 +20,16 @@
                 <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
             {% endif %}
         </ol>
+        {% if range.id and has_products %}
+            <div class="page-header">
+                {% if range.slug and range.is_public is True %}
+                    <a href="{% url 'dashboard:range-ordering' pk=range.id %}" 
+                        class="btn btn-primary float-right"> {% trans "Order products in this range" %}</a>
+                    <a href="{% url 'catalogue:range' slug=range.slug %}" 
+                        style="margin-right:10px;" class="btn btn-secondary float-right"></i> {% trans "View live" %}</a>
+                {% endif %}
+            </div>
+        {% endif %}
     </nav>
 {% endblock %}
 

@@ -1,23 +1,23 @@
 {% extends 'oscar/dashboard/layout.html' %}
-{% load category_tags product_tags %}
-{% load i18n static %}
+{% load i18n static product_tags %}
 
 {% block body_class %}{{ block.super }} catalogue{% endblock %}
 
 {% block title %}
-    {% trans "Categories" %}  | {{ block.super }}
+    {% trans "Ranges" %}  | {{ block.super }}
 {% endblock %}
 
 {% block dashboard_content %}
-<h2>Products in {{ category.name }}:</h2>
-<ul id="sortable-products" data-category="{{ category.id }}">
+
+<h2>Products in {{ range.name }}:</h2>
+<ul id="sortable-products" data-range="{{ range.id }}">
     {% for object in objects %}
-    <li data-id="{{ object.product.id }}">
+      <li data-id="{{ object.product.id }}">
         {% get_title object.product as title %}
         {{ title }}
       </li>
     {% endfor %}
-  </ul>
+</ul>
 
 <button class="btn btn-primary" id="save-order">Save display order</button>
 <br><br>
@@ -32,22 +32,21 @@
         var sortable = new Sortable(document.getElementById('sortable-products'), {
             animation: 150,
             onEnd: function (evt) {
-                var order = [];
+                var order = []
                 var items = document.querySelectorAll('#sortable-products li')
                 items.forEach(function(item) {
                     order.push(item.getAttribute('data-id'))
-                });
-                console.log("New Order:", order) 
+                })
             }
         })
         document.getElementById('save-order').addEventListener('click', function() {
             var order = []
-            var category = document.getElementById('sortable-products').getAttribute('data-category')
+            var range = document.getElementById('sortable-products').getAttribute('data-range')
             var items = document.querySelectorAll('#sortable-products li')
             items.forEach(function(item) {
                 order.push(item.getAttribute('data-id')) 
             })
-            fetch(`{% url 'category-save-order' pk=category.id %}`, {
+            fetch(`{% url 'range-save-order' pk=range.id %}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -55,11 +54,10 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
-                    category: category,
+                    range: range,
                     order: order 
                 })
             }).then(response => {
-
                 if (response.ok) {
                     if (response['url']) {
                         window.location.href = response.url

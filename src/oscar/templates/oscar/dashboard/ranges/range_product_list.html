@@ -183,11 +183,3 @@
 
 {% endblock dashboard_content %}
 
-{% block onbodyload %}
-    {{ block.super }}
-    oscar.dashboard.ranges.init();
-    oscar.dashboard.reordering.init({
-        wrapper: '.product_list',
-        submit_url: '{% url 'dashboard:range-reorder' pk=range.id %}'
-    });
-{% endblock %}

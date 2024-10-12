@@ -70,3 +70,7 @@ def get_recommended_products(request):
             except Exception as e:
                 pass
     return recommended_products 
+
+@register.simple_tag()
+def get_title(product):
+    return product.get_title()

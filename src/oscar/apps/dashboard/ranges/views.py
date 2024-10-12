@@ -15,6 +15,10 @@ from oscar.core.loading import get_classes, get_model
 from oscar.views.generic import BulkEditMixin
 from django.db import transaction
 from django.db.models import Q
+import json
+from django.db import transaction
+from django.http import HttpResponseRedirect
+from django.views.generic import DetailView
 
 
 Range = get_model("offer", "Range")
@@ -84,6 +88,7 @@ class RangeUpdateView(UpdateView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["range"] = self.object
+        ctx["has_products"] = True if self.object.all_products().count() > 0 else None
         ctx["title"] = self.object.name
         return ctx
     
@@ -345,20 +350,25 @@ class RangeProductListView(BulkEditMixin, ListView):
             )
 
 
-class RangeReorderView(View):
-    # pylint: disable=unused-argument
-    def post(self, request, pk):
-        order = dict(request.POST).get("product")
-        self._save_page_order(order)
-        return HttpResponse(status=200)
+class RangeOrderingView(DetailView):
+    template_name = 'oscar/dashboard/ranges/range_ordering.html'
+    model = Range
+    context_object_name = 'range'
 
-    def _save_page_order(self, order):
-        """
-        Save the order of the products within range.
-        """
-        range_products = RangeProduct.objects.filter(
-            range_id=self.kwargs["pk"], product_id__in=order
-        )
-        for range_product in range_products:
-            range_product.display_order = order.index(str(range_product.product_id))
-        RangeProduct.objects.bulk_update(range_products, ["display_order"])
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        range = self.get_object()
+        context['objects'] = range.rangeproduct_set.all()
+        return context
+
+def save_range_order(request, pk):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        order = data.get('order')
+        with transaction.atomic():
+            for index, key in enumerate(order):
+                object = RangeProduct.objects.get(range__id=pk, product__id=key)
+                object.display_order=index
+                object.save()
+    success_url = reverse('dashboard:range-update', kwargs={'pk':pk})
+    return HttpResponseRedirect(success_url)

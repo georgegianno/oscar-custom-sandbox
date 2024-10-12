@@ -538,6 +538,16 @@ class AbstractProduct(models.Model):
         return reverse(
             "catalogue:detail", kwargs={"product_slug": self.slug, "pk": self.id}
         )
+    
+    def get_title(self):
+        if self.structure and self.structure == 'child':
+            title = self.parent.title
+            if self.get_attribute_values():
+                attribute = self.get_attribute_values().first()
+                return title + '' + attribute.value_option.option + attribute.attribute.name
+            return title
+        else:
+            return self.title
 
     def clean(self):
         """

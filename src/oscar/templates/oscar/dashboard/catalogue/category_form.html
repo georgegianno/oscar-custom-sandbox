@@ -30,6 +30,7 @@
     {% if category.pk %}
         <div class="page-header">
             <a href="{% url 'dashboard:catalogue-category-ordering' pk=category.pk %}" class="btn btn-primary float-right"><i class="fas fa-plus-circle"></i> {% trans "Order products in this category" %}</a>
+            <a href="{% url 'catalogue:category' category_slug=category.slug pk=category.id %}" style="margin-right:10px;" class="btn btn-secondary float-right"></i> {% trans "View live" %}</a>
             <h1>{% trans "Categories" %}</h1>
         </div>
     {% endif %}

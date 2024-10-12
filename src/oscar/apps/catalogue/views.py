@@ -17,6 +17,7 @@ from django.db.models import Q
 User = get_user_model()
 Product = get_model("catalogue", "product")
 Category = get_model("catalogue", "category")
+ProductCategory = get_model("catalogue", "ProductCategory")
 ProductAlert = get_model("customer", "ProductAlert")
 ProductAlertForm = get_class("customer.forms", "ProductAlertForm")
 Favorite = get_model("catalogue", "Favorite")

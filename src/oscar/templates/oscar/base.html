@@ -19,7 +19,9 @@
 
         {# Additional CSS - specific to certain pages #}
         {% block extrastyles %}
-        <link rel="stylesheet" href="https://bootswatch.com/5/cerulean/bootstrap.min.css">{% endblock %}
+            <link rel="stylesheet" href="https://bootswatch.com/5/cerulean/bootstrap.min.css">
+            <link rel="stylesheet" href="{% static 'sandbox.css' %}">
+        {% endblock %}
 
         {% block extrahead %}{% endblock %}
 
