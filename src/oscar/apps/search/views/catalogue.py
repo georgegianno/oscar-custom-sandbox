@@ -11,6 +11,7 @@ from oscar.core.loading import get_class, get_model
 BrowseCategoryForm = get_class("search.forms", "BrowseCategoryForm")
 CategoryForm = get_class("search.forms", "CategoryForm")
 BaseSearchView = get_class("search.views.base", "BaseSearchView")
+Product = get_model("catalogue", "Product")
 Category = get_model("catalogue", "Category")
 ProductCategory = get_model("catalogue", "ProductCategory")
 
@@ -36,6 +37,7 @@ class CatalogueView(BaseSearchView):
     def get_context_data(self, *args, **kwargs):
         ctx = super().get_context_data(*args, **kwargs)
         ctx["summary"] = _("All products")
+        ctx["products"] = Product.objects.browsable()
         return ctx
 
 
@@ -83,7 +85,6 @@ class ProductCategoryView(BaseSearchView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        print(context)
         context["category"] = self.category
         context["products"] = [x.product for x in  \
             self.category.productcategory_set. \

@@ -209,7 +209,8 @@ class UseFirstStockRecord:
         # We deliberately fetch by index here, to ensure that no additional database queries are made
         # when stockrecords have already been prefetched in a queryset annotated using ProductQuerySet.base_queryset
         try:
-            return product.stockrecords.all()[0]
+            if product.stockrecords:
+                return product.stockrecords.all()[0]
         except IndexError:
             pass
 
