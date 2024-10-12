@@ -8,12 +8,13 @@ Customizations:
      preferences in relation to the time of the action.
 
 -->  In dashboard category update page, there is the option of ordering the products in this category. When this option is selected, the products of every descendant of this
-     category are added and can be ordered. It is an easy way to make products inherit their ancestors' categories without doing it manually. 
+     category are added and can be ordered. It is an easy way to make products inherit their ancestors' categories without doing it manually. In the category update dashboard
+     page there are buttons for ordering products and view live the category page.
 
 --> The ranges have been customized. Adding or removing a parent product to a range always adds or removes its variants. If the option 'Standalone and parents only' is active, 
     then all variant products are removed from range. Standalone products are not affected. For every category added to a range (Included Categories) all its descendants are 
     added with all their products. For every category removed, all its descendants are removed as well. It works with 'Standalone and parents only' option smoothly. A search has
-    been added to the range dashboard page with title search and 'Show standalone and parents only' option that filters parents and standalone products.
+    been added to the range dashboard page with title search and 'Show standalone and parents only' option that filters parents and standalone products. There is an ordering          option for products in range update page in dashboard and a button to view live the range page, which is missing from oscar. 
     Those changes save a lot of time when creating or updating ranges.
 
 --> How to test in Linux:
