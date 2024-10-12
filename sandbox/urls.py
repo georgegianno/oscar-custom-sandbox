@@ -10,6 +10,8 @@ from oscar.views import handler403, handler404, handler500
 from oscar.apps.basket.views import set_line_quantity_ajax
 from oscar.apps.catalogue.views import favorites_add_or_remove, favorite_products
 from oscar.apps.dashboard.catalogue.views import save_category_order
+from oscar.apps.dashboard.ranges.views import save_range_order
+
 from apps.sitemaps import base_sitemaps
 
 admin.autodiscover()
@@ -36,6 +38,9 @@ urlpatterns = [
     ),
     path('category-save-order/<int:pk>/', save_category_order,
             name='category-save-order',
+        ),
+    path('range-save-order/<int:pk>/', save_range_order,
+            name='range-save-order',
         ),
     path('select2/', include('django_select2.urls')),
 ]
