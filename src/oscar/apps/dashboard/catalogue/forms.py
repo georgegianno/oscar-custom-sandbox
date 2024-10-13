@@ -6,6 +6,7 @@ from treebeard.forms import movenodeform_factory
 from oscar.core.loading import get_class, get_classes, get_model
 from oscar.core.utils import slugify
 from oscar.forms.widgets import DateTimePickerInput, ImageInput
+from django.db import transaction
 
 Product = get_model("catalogue", "Product")
 ProductClass = get_model("catalogue", "ProductClass")
@@ -59,6 +60,14 @@ class SEOFormMixin:
 
 
 class CategoryForm(SEOFormMixin, BaseCategoryForm):
+    select_subcategories = forms.ModelMultipleChoiceField(
+        label=_("Add or remove products of subcategories to this category"),
+        help_text=_("Use this field if you want all the products of the selected subcategories\
+            to be added or removed to this category"),
+        queryset = Category.objects.all(),
+        required=False
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if "slug" in self.fields:
@@ -66,7 +75,22 @@ class CategoryForm(SEOFormMixin, BaseCategoryForm):
             self.fields["slug"].help_text = _(
                 "Leave blank to generate from category name"
             )
+        category = kwargs.get('instance')
+        if category:
+            descendants = category.get_descendants()
+            if len(descendants) > 0:
+                self.fields['select_subcategories'].queryset =  descendants
+                self.fields['select_subcategories'].initial = category.selected_subcategories.all()
+            else:
+                del self.fields['select_subcategories']
+        else:
+            del self.fields['select_subcategories']
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+            return instance
 
 class ProductClassSelectForm(forms.Form):
     """
@@ -87,7 +111,6 @@ class ProductClassSelectForm(forms.Form):
         qs = self.fields["product_class"].queryset
         if not kwargs.get("initial") and len(qs) == 1:
             self.fields["product_class"].initial = qs[0]
-
 
 class ProductSearchForm(forms.Form):
     upc = forms.CharField(max_length=64, required=False, label=_("UPC"))

@@ -168,6 +168,10 @@ class AbstractCategory(MP_Node):
         help_text=_("The ancestors of this category are public"),
     )
 
+    selected_subcategories = models.ManyToManyField(
+        "catalogue.Category", blank=True
+    )
+
     _slug_separator = "/"
     _full_name_separator = " > "
 

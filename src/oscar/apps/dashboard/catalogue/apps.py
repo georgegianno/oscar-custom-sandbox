@@ -67,6 +67,10 @@ class CatalogueDashboardConfig(OscarDashboardConfig):
         self.category_delete_view = get_class(
             "dashboard.catalogue.views", "CategoryDeleteView"
         )
+        
+        self.category_products_delete_view = get_class(
+            "dashboard.catalogue.views", "CategoryProductsDeleteView"
+        )
         self.category_ordering_view = get_class(
             "dashboard.catalogue.views", "CategoryOrderingView"
         )
@@ -171,6 +175,11 @@ class CatalogueDashboardConfig(OscarDashboardConfig):
                 "categories/<int:pk>/delete/",
                 self.category_delete_view.as_view(),
                 name="catalogue-category-delete",
+            ),
+            path(
+                "categories/<int:pk>/products/delete/",
+                self.category_products_delete_view.as_view(),
+                name="catalogue-category-products-delete",
             ),
             path(
                 "product-type/create/",

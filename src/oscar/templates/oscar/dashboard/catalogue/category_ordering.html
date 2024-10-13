@@ -14,7 +14,7 @@
     {% for object in objects %}
     <li data-id="{{ object.product.id }}">
         {% get_title object.product as title %}
-        {{ title }}
+        <a href="{{ object.product.get_absolute_url }}">{{ title }}</a>
       </li>
     {% endfor %}
   </ul>

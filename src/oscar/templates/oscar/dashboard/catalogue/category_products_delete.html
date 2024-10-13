@@ -1,0 +1,34 @@
+{% extends 'oscar/dashboard/layout.html' %}
+{% load i18n %}
+
+{% block body_class %}{{ block.super }} create-page{% endblock %}
+
+{% block title %}
+    {% blocktrans with name=category.name %}Delete all products of '{{ name }}'?{% endblocktrans %} | {% trans "Categories" %} | {{ block.super }}
+{% endblock %}
+
+{% block breadcrumbs %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'dashboard:catalogue-category-list' %}">{% trans "Categories" %}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'dashboard:catalogue-category-update' pk=category.pk %}">'{{ category.name }}'</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{% trans "Delete?" %}</li>
+        </ol>
+    </nav>
+{% endblock %}
+
+{% block headertext %}
+    {{ category.name }}
+{% endblock %}
+
+{% block dashboard_content %}
+    <form method="post" class="card card-body bg-light">
+        <p>{% trans "Are you sure you want to delete all the products of this category?" %}</p>
+        {% csrf_token %}
+        <div class="form-actions">
+            <button class="btn btn-danger" type="submit" data-loading-text="{% trans 'Deleting...' %}">{% trans "Delete" %}</button> {% trans "or" %}
+            <a href="{% url 'dashboard:catalogue-category-update' pk=category.pk %}">{% trans "cancel" %}</a>
+        </div>
+    </form>
+{% endblock dashboard_content %}

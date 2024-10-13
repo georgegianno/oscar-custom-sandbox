@@ -657,6 +657,36 @@ class CategoryUpdateView(CategoryListMixin, generic.UpdateView):
                 "dashboard:catalogue-category-update", kwargs={"pk": self.object.id}
             )
         return super().get_success_url()
+    
+    def form_valid(self, form):
+        object = self.get_object()
+        descendants = form.cleaned_data.get('select_subcategories')
+        category_products = object.product_set.values_list('id',flat=True)
+        if descendants:
+            to_add = descendants.exclude(id__in=object.selected_subcategories.values_list('id',flat=True))
+            if to_add:
+                for descendant in to_add:
+                    products = descendant.product_set. \
+                        exclude(id__in=category_products)
+                    if products:
+                        with transaction.atomic():
+                            product_category_mappings = [
+                                ProductCategory(category=object, product=product) 
+                                for product in products
+                            ]
+                            ProductCategory.objects.bulk_create(product_category_mappings)
+                for x in to_add:
+                    object.selected_subcategories.add(x)
+        to_remove = object.selected_subcategories.all().exclude(id__in=form.cleaned_data.get('select_subcategories').values_list('id',flat=True))
+        if to_remove:
+            for descendant in to_remove:
+                products = descendant.product_set.filter(id__in=category_products).values_list('id',flat=True)
+                if products:
+                    ProductCategory.objects.filter(product__id__in=products, category=object).delete()
+            for x in to_remove:
+                object.selected_subcategories.remove(x)
+        
+        return super().form_valid(form)
 
 
 class CategoryDeleteView(CategoryListMixin, generic.DeleteView):
@@ -671,6 +701,20 @@ class CategoryDeleteView(CategoryListMixin, generic.DeleteView):
     def get_success_url(self):
         messages.info(self.request, _("Category deleted successfully"))
         return super().get_success_url()
+    
+class CategoryProductsDeleteView(generic.DeleteView):
+    model = Category
+    template_name = "oscar/dashboard/catalogue/category_products_delete.html"
+    context_object_name = "category"
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        ProductCategory.objects.filter(category=self.object).delete()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_success_url(self):
+        messages.warning(self.request, _("Products deleted"))
+        return reverse("dashboard:catalogue-category-update", kwargs={'pk':self.get_object().pk})
 
 
 class ProductLookupView(ObjectLookupView):
@@ -1078,19 +1122,6 @@ class CategoryOrderingView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         category = self.get_object()
-        descendants = category.get_descendants()
-        if len(descendants) > 0:
-            category_products = category.product_set.values_list('id',flat=True)
-            for descendant in descendants:
-                products = descendant.product_set. \
-                    exclude(id__in=category_products)
-                if products:
-                    with transaction.atomic():
-                        product_category_mappings = [
-                            ProductCategory(category=category, product=product) 
-                            for product in products
-                        ]
-                        ProductCategory.objects.bulk_create(product_category_mappings)
         context['objects'] = ProductCategory.objects.filter(category=category).order_by('display_order')
         return context
     

@@ -63,11 +63,7 @@
                                         {% if recommended_products %}
                                             {% for product in recommended_products %}
                                                 <a class="dropdown-item" href="{{ product.get_absolute_url }}">
-                                                    {% if product.is_child %}
-                                                        {{ product.parent.title }}
-                                                    {% else %}
-                                                        {{ product.title }}
-                                                    {% endif %}
+                                                    {{ product.get_title }}
                                                 </a>
                                             {% endfor %}
                                         {% endif %}
