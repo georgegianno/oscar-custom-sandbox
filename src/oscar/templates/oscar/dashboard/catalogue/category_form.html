@@ -27,9 +27,8 @@
 {% block headertext %}{{ title }}{% endblock %}
 
 {% block header %}
-<div class="page-header">
-    {% if category.product_set.all %}
-    <div class="extra-actions pull-right">
+<!-- <div class="page-header"> -->
+    <!-- <div class="extra-actions pull-right">
         <button type="button" class="btn btn-lg btn-info dropdown-toggle float-right" style="margin-right: 5px;" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             {% trans "More actions" %} <span class="caret"></span>
         </button>
@@ -45,7 +44,16 @@
                 </a>
             </li>
         </ul> 
-    </div>
+    </div> -->
+    {% if category.product_set.all %}
+        <div class="page-header">
+                <a href="{% url 'dashboard:catalogue-category-products-delete' pk=category.pk %}" 
+                    style="margin-right:10px;" class="btn btn-danger float-right">
+                        {% trans "Delete all products" %}</a>
+                <a href="{% url 'dashboard:catalogue-category-ordering' pk=category.pk %}" 
+                    class="btn btn-primary float-right" style="margin-right:5px;"> 
+                        {% trans "Order products in this category" %}</a>
+        </div>
     {% endif %}
     <h1>{% trans "Categories" %}</h1>
 </div>

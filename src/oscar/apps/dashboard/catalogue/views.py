@@ -661,31 +661,31 @@ class CategoryUpdateView(CategoryListMixin, generic.UpdateView):
     def form_valid(self, form):
         object = self.get_object()
         descendants = form.cleaned_data.get('select_subcategories')
-        category_products = object.product_set.values_list('id',flat=True)
-        if descendants:
-            to_add = descendants.exclude(id__in=object.selected_subcategories.values_list('id',flat=True))
-            if to_add:
-                for descendant in to_add:
-                    products = descendant.product_set. \
-                        exclude(id__in=category_products)
+        if list(descendants)!=list(object.selected_subcategories.all()):
+            category_products = object.product_set.values_list('id',flat=True)
+            if descendants:
+                to_add = descendants.exclude(id__in=object.selected_subcategories.values_list('id',flat=True))
+                if to_add:
+                    for descendant in to_add:
+                        products = descendant.product_set. \
+                            exclude(id__in=category_products)
+                        if products:
+                            with transaction.atomic():
+                                product_category_mappings = [
+                                    ProductCategory(category=object, product=product) 
+                                    for product in products
+                                ]
+                                ProductCategory.objects.bulk_create(product_category_mappings)
+                    for x in to_add:
+                        object.selected_subcategories.add(x)
+            to_remove = object.selected_subcategories.all().exclude(id__in=form.cleaned_data.get('select_subcategories').values_list('id',flat=True))
+            if to_remove:
+                for descendant in to_remove:
+                    products = descendant.product_set.filter(id__in=category_products).values_list('id',flat=True)
                     if products:
-                        with transaction.atomic():
-                            product_category_mappings = [
-                                ProductCategory(category=object, product=product) 
-                                for product in products
-                            ]
-                            ProductCategory.objects.bulk_create(product_category_mappings)
-                for x in to_add:
-                    object.selected_subcategories.add(x)
-        to_remove = object.selected_subcategories.all().exclude(id__in=form.cleaned_data.get('select_subcategories').values_list('id',flat=True))
-        if to_remove:
-            for descendant in to_remove:
-                products = descendant.product_set.filter(id__in=category_products).values_list('id',flat=True)
-                if products:
-                    ProductCategory.objects.filter(product__id__in=products, category=object).delete()
-            for x in to_remove:
-                object.selected_subcategories.remove(x)
-        
+                        ProductCategory.objects.filter(product__id__in=products, category=object).delete()
+                for x in to_remove:
+                    object.selected_subcategories.remove(x)
         return super().form_valid(form)
 
 
