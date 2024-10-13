@@ -11,7 +11,18 @@ ProductAlert = get_model("customer", "ProductAlert")
 
 class UserSearchForm(forms.Form):
     email = forms.CharField(required=False, label=_("Email"))
-    name = forms.CharField(required=False, label=pgettext_lazy("User's name", "Name"))
+    name = forms.CharField(
+        required=False, label=pgettext_lazy("User's name", "Name"))
+    USER_CHOICES = [
+                     ('Customers', 'Customers'),
+                     ('Guests', 'Guests'),
+                     ('All', 'All')]
+    
+    users= forms.ChoiceField(label=_('Users'), choices=USER_CHOICES, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['users'].initial = self.fields['users'].choices[0][0]
 
 
 class ProductAlertUpdateForm(forms.ModelForm):

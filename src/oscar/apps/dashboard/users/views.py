@@ -13,6 +13,12 @@ from django_tables2 import SingleTableView
 from oscar.core.compat import get_user_model
 from oscar.core.loading import get_class, get_classes, get_model
 from oscar.views.generic import BulkEditMixin
+from oscar.apps.order.models import Guest
+from itertools import chain
+from operator import attrgetter
+from django.db.models import Count, When, Case, Value, IntegerField, Min
+from django.core.paginator import Paginator
+
 
 UserSearchForm, ProductAlertSearchForm, ProductAlertUpdateForm = get_classes(
     "dashboard.users.forms",
@@ -36,10 +42,18 @@ class IndexView(BulkEditMixin, FormMixin, SingleTableView):
     context_table_name = "users"
     desc_template = _("%(main_filter)s %(email_filter)s %(name_filter)s")
     description = ""
-
+    
     def dispatch(self, request, *args, **kwargs):
+        self.guest_context = None
+        self.all_context = None
         form_class = self.get_form_class()
         self.form = self.get_form(form_class)
+        if 'search' in request.GET:
+            if 'users' in request.GET:
+                if request.GET['users'] == 'Guests':
+                    self.guest_context = self.get_queryset()
+                elif request.GET['users'] == 'All':
+                    self.all_context = self.get_queryset()
         return super().dispatch(request, *args, **kwargs)
 
     def get_table_pagination(self, table):
@@ -61,9 +75,30 @@ class IndexView(BulkEditMixin, FormMixin, SingleTableView):
         return kwargs
 
     def get_queryset(self):
-        queryset = self.model.objects.select_related("userrecord").order_by(
-            "-date_joined"
-        )
+        if self.request.GET.get('users', None) == 'Guests':
+            queryset = Guest.objects.annotate(count_orders=Count('orders')).order_by('-count_orders'). \
+                annotate(date_joined=Min('orders__date_placed'))
+        elif self.request.GET.get('users', None) == 'All':
+            user_emails = User.objects.values('email')
+            guest_orders_only = Guest.objects.annotate(count_orders=Count('orders')).exclude(email__in=user_emails). \
+                annotate(date_joined=Min('orders__date_placed'))
+            guest_orders_from_users = User.objects.filter(email__in=Guest.objects.values('email')).values_list('email', flat=True)
+            guest_order_counts = Guest.objects.filter(email__in=guest_orders_from_users.values('email')). \
+                annotate(order_count=Count('orders')).values('email', 'order_count')
+            guest_order_count_dict = {guest['email']: guest['order_count'] for guest in guest_order_counts}
+            q3 = User.objects.annotate(
+                count_orders=Case(
+                    *[
+                        When(email=email, then=Value(order_count)+Count('orders'))
+                        for email, order_count in guest_order_count_dict.items()
+                    ],
+                    default=Count('orders'),
+                    output_field=IntegerField()
+                )
+            )
+            queryset = sorted(list(chain(guest_orders_only, q3)), key=attrgetter('count_orders'), reverse=True)
+        else:
+            queryset = self.model.objects.all().order_by('-date_joined')
         return self.apply_search(queryset)
 
     def apply_search(self, queryset):
@@ -81,24 +116,37 @@ class IndexView(BulkEditMixin, FormMixin, SingleTableView):
     def apply_search_filters(self, queryset, data):
         """
         Function is split out to allow customisation with little boilerplate.
-        """
-        if data["email"]:
-            email = data["email"]
-            queryset = queryset.filter(email__istartswith=email)
-            self.desc_ctx["email_filter"] = _(" with email matching '%s'") % email
-        if data["name"]:
+        """ 
+        if data['email']:
+            email = data['email']
+            if  self.request.GET.get('users', None) == 'All':
+                q1=Guest.objects.filter(email__istartswith=email).annotate(count=Count('orders'))
+                q2=User.objects.filter(email__istartswith=email).annotate(count=Count('orders'))
+                queryset = [obj for obj in queryset if obj in q1 or obj in q2]
+            else:
+                queryset = queryset.filter(email__istartswith=email)
+            self.desc_ctx['email_filter'] \
+                = _(" with email matching '%s'") % email
+        if data['name']:
             # If the value is two words, then assume they are first name and
             # last name
-            parts = data["name"].split()
-            # always true filter
-            condition = Q()
-            for part in parts:
-                condition &= Q(first_name__icontains=part) | Q(
-                    last_name__icontains=part
-                )
-            queryset = queryset.filter(condition).distinct()
-            self.desc_ctx["name_filter"] = _(" with name matching '%s'") % data["name"]
-
+            if self.request.GET.get('users', None) == 'Guests':
+                condition = Q(name__icontains=data['name'])
+                queryset = queryset.filter(condition).distinct()
+            elif self.request.GET.get('users', None) == 'All':
+                condition1 = Q(name__icontains=data['name'])
+                condition2 = Q(first_name__icontains=data['name']) | Q(last_name__icontains=data['name'])
+                q1=Guest.objects.filter(condition1).annotate(count=Count('orders'))
+                q2=User.objects.filter(condition2).annotate(count=Count('orders'))
+                queryset = [obj for obj in queryset if obj in q1 or obj in q2]
+            else:
+                parts = data['name'].split()
+                # always true filter
+                condition = Q()
+                for part in parts:
+                    condition &= Q(first_name__icontains=part) | Q(last_name__icontains=part)
+                queryset = queryset.filter(condition).distinct()
+            self.desc_ctx['name_filter'] = _(" with name matching '%s'") % data['name']
         return queryset
 
     def get_table(self, **kwargs):
@@ -108,7 +156,17 @@ class IndexView(BulkEditMixin, FormMixin, SingleTableView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["form"] = self.form
+        context['form'] = self.form
+        if self.guest_context:
+            context['guest_context'] =  self.guest_context
+        if self.all_context:
+            context['all_context'] =  self.all_context
+        if self.guest_context or self.all_context:
+            paginator = Paginator(self.get_queryset(), 25)
+            page_number = self.request.GET.get("page")
+            page_obj = paginator.get_page(page_number)
+            context['page_obj']= page_obj
+            context['paginator'] = paginator
         return context
 
     def make_inactive(self, request, users):

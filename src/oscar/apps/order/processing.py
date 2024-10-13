@@ -3,6 +3,7 @@ from decimal import Decimal as D
 from django.utils.translation import gettext_lazy as _
 
 from oscar.apps.order import exceptions
+from oscar.apps.order.models import Guest
 
 
 class EventHandler(object):
@@ -68,6 +69,8 @@ class EventHandler(object):
         viewed as a shipping event affecting all lines.
         """
         order.set_status(new_status)
+        if new_status == 'Complete':
+            create_or_update_guest(order)
         if note_msg:
             self.create_note(order, note_msg)
 
@@ -264,4 +267,20 @@ class EventHandler(object):
         return order.communication_events.create(event_type=event_type)
 
     def create_note(self, order, message, note_type="System"):
-        return order.notes.create(message=message, note_type=note_type, user=self.user)
+        return order.notes.create(message=message, note_type=note_type, user=self.user)    
+    
+def create_or_update_guest(order):
+    if order.user is None:
+        if Guest.objects.filter(email=order.guest_email):
+            guest = Guest.objects.filter(email=order.guest_email).last()
+            guest.orders.add(order)
+            guest.save()
+        else:
+            try:
+                name = order.shipping_address.first_name + ' ' + order.shipping_address.last_name
+                email = order.guest_email
+                guest = Guest.objects.create(name=name, email=email)
+                guest.orders.add(order)
+                print(guest)
+            except Exception as error:
+                print(error)

@@ -135,3 +135,16 @@ if not is_model_registered("order", "Surcharge"):
         pass
 
     __all__.append("Surcharge")
+
+class Guest(models.Model):
+    name = models.CharField(max_length=150, blank=True, null=True)
+    email = models.CharField(max_length=150, blank=True, null=True)
+    orders = models.ManyToManyField(Order, blank=True, null=True)
+
+    def __str__(self):
+        return self.email
+    
+    def is_guest(self):
+        return True
+    
+__all__.append("Guest")

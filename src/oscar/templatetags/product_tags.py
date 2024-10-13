@@ -5,15 +5,16 @@ from oscar.core.loading import get_model
 from oscar.core.compat import get_user_model
 from oscar.apps.catalogue.views import category_occurencies_map
 import random
-
+from django.db.models import Sum
 
 User = get_user_model()
 Product = get_model("catalogue", "product")
 Category = get_model("catalogue", "category")
 Favorite = get_model("catalogue", "Favorite")
+Order = get_model('order', 'Order')
+
 
 register = template.Library()
-
 
 @register.simple_tag(takes_context=True)
 def render_product(context, product):
@@ -74,3 +75,17 @@ def get_recommended_products(request):
 @register.simple_tag()
 def get_title(product):
     return product.get_title()
+
+@register.simple_tag(takes_context=True)
+def total_order_value(context, email, for_guests=None):
+    # The count of the total of the orders the customer made as guest and as user
+    orders = Order.objects.filter(Q(guest_email=email)|Q(user__email=email)).filter(status='Complete')
+    if 'superuser' in email:
+        print(orders)
+    if for_guests:
+        orders = orders.filter(user=None)
+    if orders:
+        orders_total_value = float(orders.aggregate(Sum('total_incl_tax')).get('total_incl_tax__sum'))
+    else: 
+        orders_total_value = 0
+    return orders_total_value

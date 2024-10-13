@@ -11,6 +11,7 @@ from oscar.apps.basket.views import set_line_quantity_ajax
 from oscar.apps.catalogue.views import favorites_add_or_remove, favorite_products
 from oscar.apps.dashboard.catalogue.views import save_category_order
 from oscar.apps.dashboard.ranges.views import save_range_order
+from oscar.apps.dashboard.users.export import export_customers
 
 from apps.sitemaps import base_sitemaps
 
@@ -49,6 +50,7 @@ urlpatterns = [
 urlpatterns += i18n_patterns(
     path('', include(apps.get_app_config('oscar').urls[0])),
     path('favorite-products/', favorite_products, name='favorite-products'),
+    path('dashboard/users/export/<str:customers>', export_customers, name='export_customers'),
 )
 
 if settings.DEBUG:
