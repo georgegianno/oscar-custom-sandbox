@@ -7,6 +7,8 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext_lazy as _
 
 from oscar.core.loading import get_class, get_model
+from django.core.paginator import Paginator
+
 
 BrowseCategoryForm = get_class("search.forms", "BrowseCategoryForm")
 CategoryForm = get_class("search.forms", "CategoryForm")
@@ -86,9 +88,16 @@ class ProductCategoryView(BaseSearchView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["category"] = self.category
-        context["products"] = [x.product for x in  \
+        products = [x.product for x in  \
             self.category.productcategory_set. \
                 order_by('display_order') if x.product.is_public is True]
+        paginator = Paginator(products, 16)
+        page_number = self.request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+        context["category"] = self.category
+        context["products"] = page_obj
+        context['paginator'] = paginator
+        context['page_obj'] = page_obj
         return context
 
     def get_form_kwargs(self):

@@ -615,5 +615,5 @@ def set_line_quantity_ajax(request, id, quantity):
                 data['basket_total'] = round(basket_total, 2)
                 data['delete_line'] = True
                 data['currency'] = currency
-        print(data)
+        # print(data)
         return JsonResponse(data)

@@ -13,6 +13,7 @@ from django_tables2 import A, Column, LinkColumn, TemplateColumn
 from oscar.core.compat import get_user_model
 from oscar.core.loading import get_class, get_model
 from django.db.models import F, Count, Sum, Q, Case, When, FloatField
+from django.conf import settings
 
 
 User = get_user_model()
@@ -50,7 +51,14 @@ class UserTable(DashboardTable):
     
     def render_orders_total_value(self, value, record):
         total = record.orders.filter(status='Complete').aggregate(Sum('total_incl_tax')).get('total_incl_tax__sum')
-        return float(total) if total else 0
+        if settings.OSCAR_DEFAULT_CURRENCY == 'GBP':
+            coin =  '£'
+        else: 
+            coin = '€'
+        if total:
+            return coin + str(float(total))
+        else:
+            return coin + 0  
     
     def order_orders_total_value(self, queryset, is_descending):
         queryset = queryset.annotate(

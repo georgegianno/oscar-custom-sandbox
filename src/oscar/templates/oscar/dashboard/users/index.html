@@ -2,6 +2,8 @@
 {% load dashboard_tags %}
 {% load i18n product_tags %}
 {% load render_table from django_tables2 %}
+{% load currency_filters %}
+
 
 {% block body_class %}{{ block.super }} users{% endblock %}
 
@@ -71,7 +73,7 @@
                             <td>{{ guest.date_joined }}</td>
                             <td>{{ guest.orders.count }}</td>
                             {% total_order_value guest.email True as total_value %}
-                            <td>{{ total_value }}</td>
+                            <td>{{ total_value|currency }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -122,7 +124,7 @@
                             <td>{{ user.count_orders }}</td>
                             
                             {% total_order_value user.email as total_value %}
-                            <td>{{ total_value }}</td>
+                            <td>{{ total_value|currency }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

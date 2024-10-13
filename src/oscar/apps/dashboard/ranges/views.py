@@ -169,7 +169,6 @@ class RangeProductListView(BulkEditMixin, ListView):
         products = self.get_product_range().all_products()
         search_title = self.request.GET.get('search_title')
         search_parents = self.request.GET.get('search_parents')
-        print(self.request.GET)
         if search_title:
             products = products.filter(title__icontains=search_title)
         if search_parents=='on':

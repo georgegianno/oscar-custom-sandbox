@@ -80,8 +80,6 @@ def get_title(product):
 def total_order_value(context, email, for_guests=None):
     # The count of the total of the orders the customer made as guest and as user
     orders = Order.objects.filter(Q(guest_email=email)|Q(user__email=email)).filter(status='Complete')
-    if 'superuser' in email:
-        print(orders)
     if for_guests:
         orders = orders.filter(user=None)
     if orders:
