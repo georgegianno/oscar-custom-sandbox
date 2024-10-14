@@ -3,8 +3,7 @@ from django.template.loader import select_template
 from django.db.models import Q
 from oscar.core.loading import get_model
 from oscar.core.compat import get_user_model
-from oscar.apps.catalogue.views import category_occurencies_map
-import random
+from oscar.apps.catalogue.views import category_occurencies_map, recommendation_generator
 from django.db.models import Sum
 
 User = get_user_model()
@@ -59,18 +58,11 @@ def get_recommended_products(request):
         categories = category_occurencies_map(user_favorites)[:2][::-1]
         latest_two = user_favorites.order_by('-created_at')[:2]
         latest = user_favorites.filter(id__in=latest_two)
-        latest = category_occurencies_map(latest)[:2]
-        latest.extend(categories)
-        latest.append(latest[-1])
-        for id in latest:
-            recommended = products.filter(Q(categories__id=id) | Q(parent__categories__id=id)). \
-                exclude(id__in=[x.id for x in recommended_products])
-            try:
-                random_index = random.randint(0, recommended.count() - 1)
-                recommended_products.append(recommended[random_index])
-            except Exception as e:
-                pass
-    return recommended_products 
+        latest_three = category_occurencies_map(latest)[:3]
+        latest_three.extend(categories)
+        target = latest_three
+        recommended_products = recommendation_generator(target, products, recommended_products)
+        return recommended_products 
 
 @register.simple_tag()
 def get_title(product):

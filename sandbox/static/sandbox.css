@@ -19,7 +19,8 @@
     cursor: pointer;
     white-space: normal;
     overflow: hidden;
-    height: 50px;
+    text-overflow: ellipsis;
+    height: auto;
 }
 
 #sortable-products li a {

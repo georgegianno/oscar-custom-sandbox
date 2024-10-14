@@ -11,8 +11,7 @@ from oscar.core.utils import is_ajax
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.db.models import Q
-
-
+import random
 
 User = get_user_model()
 Product = get_model("catalogue", "product")
@@ -158,6 +157,21 @@ def favorite_products(request):
     products = Product.objects.filter(id__in=Favorite.objects.filter(user=user) \
         .values_list('product_id', flat=True))
     return render(request, 'oscar/catalogue/favorites.html', {'favorite_products': products})
+
+def recommendation_generator(target, products, recommended_products):
+    for id in target:
+        recommended = products.filter(Q(categories__id=id) | Q(parent__categories__id=id)). \
+            exclude(id__in=[x.id for x in recommended_products])
+        try:
+            if len(recommended_products) < 5:
+                random_index = random.randint(0, recommended.count() - 1)
+                recommended_products.append(recommended[random_index])
+        except Exception as e:
+            print(e)
+            pass
+        if len(recommended_products) == 5:
+            return recommended_products
+    return recommendation_generator(target, products, recommended_products)
 
 # Import catalogue and category view from search app
 CatalogueView = get_class("search.views", "CatalogueView")
