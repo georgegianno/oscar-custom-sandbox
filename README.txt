@@ -17,11 +17,9 @@ Customizations:
     2. If the option 'Standalone and parents only' is active, then all child products are removed from range. Standalone products are not affected.
     3. For every category added to a range ('Included categories' field), all its descendants are added with all their products. For every category removed, all its descendants
        are removed as well. It works with 'Standalone and parents only' option smoothly.
-    4. A search has been added to the range dashboard page with title search option and 'Show standalone and parents only' option that filters parents and standalone products. There
-     is an ordering option for products in range update page in dashboard and a button to view live the range page, which is missing from oscar.
+    4. A search has been added to the range dashboard page with title search option and 'Show standalone and parents only' option that filters parents and standalone products.           There is an ordering option for products in range update page in dashboard and a button to view live the range page, which is missing from oscar.
 
---> Customers tab in dashboard has been updated to contain data for guest orders and options to export data for users, guests and all together, including their number of orders and
-    total money spent on orders with status 'Complete'.
+--> Customers tab in dashboard has been updated to contain data for guest orders and options to export data for users, guests and all together, including their number of orders       and total money spent on orders with status 'Complete'.
 
 --> How to test in Linux:
     set python version to 3.8.6
