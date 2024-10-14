@@ -13,6 +13,7 @@ from django.utils.module_loading import import_string
 from django.utils.text import slugify as django_slugify
 from django.utils.timezone import get_current_timezone, is_naive, make_aware
 from django.utils.translation import get_language, to_locale
+from django.core.paginator import Paginator
 
 SLUGIFY_RE = re.compile(r"[^\w\s-]", re.UNICODE)
 
@@ -190,3 +191,11 @@ def is_ajax(request):
     For Oscar projects that's usually not a concern though.
     """
     return request.META.get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest"
+
+def paginate(request, objects, context):
+    paginator = Paginator(objects, 16)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context['page_obj']= page_obj
+    context['paginator'] = paginator
+    return context

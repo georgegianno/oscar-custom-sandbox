@@ -3,12 +3,12 @@
 <div class="row">
     <div class="col-sm-2">
         <div class="image_container w-100">
-            {% if product.primary_image %}
-                {% with image=product.primary_image %}
-                    {% oscar_thumbnail image.original "x155" upscale=False as thumb %}
-                    <a href="{{ product.get_absolute_url }}">
-                        <img src="{{ thumb.url }}" alt="{{ product.get_title }}" class="img-thumbnail w-auto mx-auto my-0">
-                    </a>
+            <div class="image_container w-100">
+                <a href="{{ product.get_absolute_url }}">
+                    <img src="{% if product.primary_image and product.primary_image.original and product.primary_image.original.url %}{{ product.primary_image.original.url }}{% else %}{% static 'oscar/img/image_not_found.jpg' %}{% endif %}" 
+                         alt="{{ product.get_title }}" class="img-thumbnail w-auto mx-auto my-0">
+                </a>
+            </div>
                 {% endwith %}
             {% endif %}
         </div>

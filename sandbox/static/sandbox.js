@@ -72,6 +72,9 @@ function _updateCartQuantity(lineId, quantity) {
         }
         var currency = data['currency']  
         var basketTotal = data['basket_total']
+        var basketTotalInclDiscounts = data['basket_total_incl_discounts']
+        var basketTotalVoucherDiscount = data['total_voucher_discount']
+        var basketTotalOfferDiscount = data['total_offer_discount']
         var lineTotal = data['line_total'] 
         var basketLine = document.querySelector(`[data-line-id="${lineId}"]`)
         if (parseInt(quantity) > 0 && currency && lineTotal) {
@@ -83,10 +86,28 @@ function _updateCartQuantity(lineId, quantity) {
                 basketLine.remove()
             }
         }
-        if (currency && basketTotal) {
-            document.querySelectorAll('span[data-total="order-total"]').forEach(function(price) {
-                price.textContent = currency+basketTotal  
-            })
+        if (currency) {
+            if (basketTotal && basketTotalInclDiscounts) { 
+                document.querySelectorAll('span[data-total="order-total"]').forEach(function(price) {
+                    price.textContent = currency+basketTotalInclDiscounts  
+                })
+                document.querySelectorAll('[data-discounts="excl"]').forEach(function(price) {
+                    price.textContent = currency+basketTotal 
+                })
+                document.querySelectorAll('[data-discounts="incl"]').forEach(function(price) {
+                    price.textContent = currency+basketTotalInclDiscounts  
+                })
+            }
+            if (basketTotalVoucherDiscount) {
+                document.querySelectorAll('[data-discounts="voucher-discount"]').forEach(function(price) {
+                    price.textContent = '-'+currency+basketTotalVoucherDiscount
+                })
+            }
+            if (basketTotalOfferDiscount) {
+                document.querySelectorAll('[data-discounts="offer-discount"]').forEach(function(price) {
+                    price.textContent = '-'+currency+basketTotalOfferDiscount
+                })
+            }
         }
     })
     .catch(error => {
@@ -170,9 +191,8 @@ function displaySuccessMessage(message) {
 function setQuantityListeners(elements) {
     elements.forEach(function(element) {
         var input = element.querySelector('input')
-        input.addEventListener('input', (event) => {
+        input.addEventListener('change', (event) => {
             _updateCart(event)
-
         })
         element.addEventListener('click', function(event) {
             _updateCart(event)

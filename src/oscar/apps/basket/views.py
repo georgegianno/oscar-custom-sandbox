@@ -593,14 +593,25 @@ def set_line_quantity_ajax(request, id, quantity):
         line = basket.lines.get(id=id)
         line_total = line.price_incl_tax*quantity
         currency = '£' if basket.currency == 'GBP' else '€'
+        total_voucher_discount = 0
+        total_offer_discount = 0
         data = {}
         if quantity > 0:
             line.quantity = quantity
             line.save()
             basket.save()
-            basket_total = basket.lines.aggregate( \
-                sum=Sum(F('price_incl_tax')*F('quantity'))).get('sum')
+            basket_total = round(basket.lines.aggregate( \
+                sum=Sum(F('price_incl_tax')*F('quantity'))).get('sum'), 2)
             data['basket_total'] = round(basket_total, 2)
+            if basket.grouped_voucher_discounts:
+                total_voucher_discount += round(sum(item['discount'] \
+                    for item in basket.grouped_voucher_discounts), 2)
+                data['total_voucher_discount'] = total_voucher_discount
+            if basket.offer_discounts:
+                total_offer_discount += round(sum(item['discount'] \
+                    for item in basket.offer_discounts), 2)
+                data['total_offer_discount'] = total_offer_discount               
+            data['basket_total_incl_discounts'] = basket_total - total_voucher_discount - total_offer_discount
             data['line_total'] = line_total
             data['line_id'] = line.id
             data['currency'] = currency
@@ -615,5 +626,5 @@ def set_line_quantity_ajax(request, id, quantity):
                 data['basket_total'] = round(basket_total, 2)
                 data['delete_line'] = True
                 data['currency'] = currency
-        # print(data)
+        print(data)
         return JsonResponse(data)

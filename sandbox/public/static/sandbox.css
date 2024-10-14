@@ -1,0 +1,39 @@
+#sortable-products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 5px;
+    list-style-type: none;
+    padding: 0;
+}
+
+#sortable-products li {
+    background-color: #f5f5f5;
+    padding: 5px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-size: 10px;
+    color: #333;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    white-space: normal;
+    overflow: hidden;
+    height: 50px;
+}
+
+#sortable-products li a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+#sortable-products li:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#sortable-products li:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
