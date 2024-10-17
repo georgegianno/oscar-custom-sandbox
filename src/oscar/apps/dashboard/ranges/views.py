@@ -91,34 +91,6 @@ class RangeUpdateView(UpdateView):
         ctx["has_products"] = True if self.object.all_products().count() > 0 else None
         ctx["title"] = self.object.name
         return ctx
-    
-    # Weird way to validate but we need instant evaluation in some spots to avoid quaryset values
-    # changing due to lazy queries. Not super optimized but does the job.
-    def form_valid(self, form):
-        range = self.get_object()
-        data = form.cleaned_data
-        if list(data['included_categories'])!=list(range.included_categories.all()):
-            included_before = [x.id for x in range.included_categories.all()]
-            included_after = [x.id for x in data['included_categories']]
-            added = Category.objects.filter(id__in=included_after).exclude(id__in=included_before)
-            c_added = Category.objects.filter(id__in=[x.id for x in added])
-            removed = list(Category.objects.filter(id__in=included_before).exclude(id__in=included_after))
-            c_removed = Category.objects.filter(id__in=[x.id for x in removed])
-            with transaction.atomic():
-                for category in c_added:
-                    descendants_and_self = list(category.get_descendants_and_self())
-                    p_added = [x.id for x in Product.objects.filter(categories__in=descendants_and_self)]
-                    for id in p_added:
-                        range.add_product(Product.objects.get(id=id))
-                    range.included_categories.add(*descendants_and_self)
-                for category in c_removed:
-                    descendants_and_self = list(category.get_descendants_and_self())
-                    range.included_categories.remove(*descendants_and_self)
-                    p_removed = [x.id for x in Product.objects.filter(categories__in=descendants_and_self)]
-                    for id in p_removed:
-                        range.remove_product(Product.objects.get(id=id))
-        return super().form_valid(form)
-
 
 class RangeDeleteView(DeleteView):
     model = Range

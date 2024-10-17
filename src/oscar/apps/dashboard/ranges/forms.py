@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from oscar.core.loading import get_model
 
 Product = get_model("catalogue", "Product")
+Category = get_model("catalogue", "Category")
 Range = get_model("offer", "Range")
 RangeProductFileUpload = get_model("offer", "RangeProductFileUpload")
 
@@ -25,26 +26,48 @@ class RangeForm(forms.ModelForm):
             "parents_only",
             "included_categories",
         ]
+ 
+    def check_parents_only(self, instance):
+        products = instance.all_products()
+        parents = products.filter(structure='parent')
+        children = products.filter(structure='child')
+        if instance.parents_only is True:
+            if children:
+                for product in children:
+                    instance.remove_product(product)
+        elif products and parents and not children:
+            for product in Product.objects.filter(parent__in=parents):
+                instance.add_product(product)
 
-    # We call the super() with commit=False once to give the unsaved m2m instances the save_m2m
-    # method so when save() is called with commit=True the m2m models are saved.  
+    def add_or_remove_included_categories(self, instance, included_categories, cleaned_categories):
+        remove_list = []
+        add_list = []
+        initial_remove = included_categories.exclude(id__in=cleaned_categories.values_list('id', flat=True))
+        for x in initial_remove:
+            remove_list.extend([y.id for y in x.get_descendants_and_self()])
+        initial_add = cleaned_categories.exclude(id__in=included_categories.values_list('id', flat=True))
+        for x in initial_add:
+            add_list.extend([y.id for y in x.get_descendants_and_self()])
+        included_list = [x.id for x in included_categories]
+        for product in Product.objects.filter(categories__in=add_list):
+            instance.add_product(product)
+        for product in Product.objects.filter(categories__in=remove_list):
+            instance.remove_product(product)
+        set_categories = Category.objects.filter( \
+            Q(id__in=included_list) | Q(id__in=add_list)).exclude(id__in=remove_list).distinct()
+        instance.included_categories.set(set_categories)
+
     def save(self, commit=True):
         instance = super().save(commit=False)
         if commit:
             instance.save()
-            products = instance.all_products()
-            all = list(products.filter(structure='child'))
-            if instance.parents_only is True:
-                for product in all:
-                    instance.remove_product(product)
-            else:
-                if len(all) == 0:
-                    parents = list(products.filter(structure='parent'))
-                    for product in parents:
-                        instance.add_product(product)
-            # instance.included_products.clear()
+        included_categories = instance.included_categories.all()
+        cleaned_categories = self.cleaned_data.get('included_categories')
+        if list(included_categories) != list(cleaned_categories):
+            self.add_or_remove_included_categories( \
+                instance, included_categories, cleaned_categories)
+        self.check_parents_only(instance)
         return instance 
-
 
 # pylint: disable=attribute-defined-outside-init
 class RangeProductForm(forms.Form):
