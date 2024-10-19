@@ -1,3 +1,5 @@
+READ THIS AS RAW 
+
 This is a sample django-oscar project with some cool features. 
 
 Customizations:
