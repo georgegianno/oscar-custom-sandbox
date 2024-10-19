@@ -1,23 +1,3 @@
-document.addEventListener('DOMContentLoaded', function() {
-    var quantityInputs = document.querySelectorAll('.input-group')
-    if (quantityInputs) {
-        setQuantityListeners(quantityInputs)
-    }
-    var removeLinks = document.querySelectorAll('a[data-action="remove"]')
-    if (removeLinks) {
-        setRemoveListeners(removeLinks)
-    }
-    var basketAddForms = document.querySelectorAll('form[action*="/basket/add/"]')
-    if (basketAddForms) {
-        _addToBasket(basketAddForms)
-    }
-    var favoriteLinks = document.querySelectorAll('a[data-favorite-product]')
-    if (favoriteLinks) {
-        console.log(favoriteLinks)
-        addOrRemoveFavorites(favoriteLinks)
-    }
-})
-
 function getCsrf() {
     let csrfToken = null
     const cookies = document.cookie.split('; ')
@@ -31,21 +11,14 @@ function getCsrf() {
     return csrfToken
 }
 
-function _updateCart(event) {
-    var quantity = event.target.value
-    if (parseInt(quantity) > parseInt(event.target.max)) {
-        event.target.value = event.target.max
-        quantity = event.target.max
-    }
-    if (parseInt(quantity) < 0) {
-        event.target.value = 1
-        quantity = 1
-    }
-    var basketLine = event.target.closest('[data-line-id]')
-    var lineId = basketLine.getAttribute('data-line-id')
-    if (quantity && lineId) {
-        _updateCartQuantity(lineId, quantity) 
-    } 
+function disable(element) {
+    element.style.pointerEvents = 'none'
+    element.style.opacity= '0.5'
+}
+
+function enable(element) {
+    element.style.pointerEvents = 'auto'
+    element.style.opacity= '1'
 }
 
 function _updateCartQuantity(lineId, quantity) {
@@ -73,8 +46,8 @@ function _updateCartQuantity(lineId, quantity) {
         var currency = data['currency']  
         var basketTotal = data['basket_total']
         var basketTotalInclDiscounts = data['basket_total_incl_discounts']
-        var basketTotalVoucherDiscount = data['total_voucher_discount']
-        var basketTotalOfferDiscount = data['total_offer_discount']
+        var voucherKeys = Object.keys(data).filter(key => key.includes('voucher'))
+        var offerKeys = Object.keys(data).filter(key => key.includes('offer'))
         var lineTotal = data['line_total'] 
         var basketLine = document.querySelector(`[data-line-id="${lineId}"]`)
         if (parseInt(quantity) > 0 && currency && lineTotal) {
@@ -98,14 +71,14 @@ function _updateCartQuantity(lineId, quantity) {
                     price.textContent = currency+basketTotalInclDiscounts  
                 })
             }
-            if (basketTotalVoucherDiscount) {
-                document.querySelectorAll('[data-discounts="voucher-discount"]').forEach(function(price) {
-                    price.textContent = '-'+currency+basketTotalVoucherDiscount
+            if (voucherKeys) {
+                voucherKeys.forEach(function(key) {
+                    document.querySelector(`[data-discounts=${key}]`).textContent = '-'+currency+data[key]
                 })
             }
-            if (basketTotalOfferDiscount) {
-                document.querySelectorAll('[data-discounts="offer-discount"]').forEach(function(price) {
-                    price.textContent = '-'+currency+basketTotalOfferDiscount
+            if (offerKeys) {
+                offerKeys.forEach(function(key) {
+                    document.querySelector(`[data-discounts=${key}]`).textContent = '-'+currency+data[key]
                 })
             }
         }
@@ -147,7 +120,6 @@ function _addToBasket(forms) {
                 var basketTotal = data['basket_total']
                 var quickview = data['quickview']
                 var quickviewSpan = document.querySelector('span[data-quickview]')
-                console.log(quickview)
                 if (successMessage) {
                     displaySuccessMessage(successMessage)
                     submitButton.disabled = false
@@ -188,14 +160,60 @@ function displaySuccessMessage(message) {
     }, 1200) 
 }
 
+function _emptyBasket(response) {
+    if (response['empty_basket']) {
+        if (document.querySelector('.content')) {
+            document.querySelector('.content').innerHTML = response['empty_basket']
+        }
+    }
+}
+
 function setQuantityListeners(elements) {
     elements.forEach(function(element) {
         var input = element.querySelector('input')
-        input.addEventListener('change', (event) => {
-            _updateCart(event)
+        var plus = element.querySelector('[data-arrow="plus"]')
+        var minus = element.querySelector('[data-arrow="minus"]')
+        var max = parseInt(input.getAttribute('data-max'))
+        var basketLine = input.closest('[data-line-id]')
+        var lineId = basketLine.getAttribute('data-line-id')
+        input.addEventListener('input', function() {
+            value = parseInt(input.value)
+            if (value > max) {
+                input.value = max
+            } else if (!(parseInt(value)) || !(0<value<=max)){
+                input.value = 1
+            }
+            var quantity = input.value
+            if (quantity && lineId) {
+                _updateCartQuantity(lineId, quantity) 
+            } 
         })
-        element.addEventListener('click', function(event) {
-            _updateCart(event)
+        plus.addEventListener('click', function() {
+            var previousValue = parseInt(input.value)
+            enable(minus)
+            if (parseInt(input.value) == max) {
+                disable(plus)
+            }
+            else {
+                input.value = previousValue + 1
+                var quantity = previousValue + 1
+                if (quantity && lineId) {
+                    _updateCartQuantity(lineId, quantity) 
+                } 
+            }
+        })
+        minus.addEventListener('click', function() {
+            enable(plus)
+            var previousValue = parseInt(input.value)
+            if (previousValue > 1) {
+                input.value = previousValue - 1
+                var quantity = input.value
+                if (quantity && lineId) {
+                    _updateCartQuantity(lineId, quantity) 
+                } 
+            } else {
+                disable(minus)
+            }
         })
     })
 }
@@ -233,7 +251,7 @@ function addOrRemoveFavorites(links) {
                 return response.json()
             })
             .then(data => {
-                console.log(data)
+                // console.log(data)
                 var successMessage = data['success_message']
                 var displayText = data['display_text']
                 if (successMessage) {
@@ -250,11 +268,27 @@ function addOrRemoveFavorites(links) {
     })
 }
 
-function _emptyBasket(response) {
-    if (response['empty_basket']) {
-        if (document.querySelector('.content')) {
-            document.querySelector('.content').innerHTML = response['empty_basket']
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('keydown', function(event) {
+        if (event.key=='Enter') {
+            event.preventDefault()
         }
+    })
+    var quantityInputs = document.querySelectorAll('.input-group')
+    if (quantityInputs) {
+        setQuantityListeners(quantityInputs)
     }
-}
+    var removeLinks = document.querySelectorAll('a[data-action="remove"]')
+    if (removeLinks) {
+        setRemoveListeners(removeLinks)
+    }
+    var basketAddForms = document.querySelectorAll('form[action*="/basket/add/"]')
+    if (basketAddForms) {
+        _addToBasket(basketAddForms)
+    }
+    var favoriteLinks = document.querySelectorAll('a[data-favorite-product]')
+    if (favoriteLinks) {
+        addOrRemoveFavorites(favoriteLinks)
+    }
+})
 
