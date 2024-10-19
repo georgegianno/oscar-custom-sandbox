@@ -12,6 +12,7 @@ from django.views.generic import FormView, View
 from extra_views import ModelFormSetView
 from django.db.models import F, Sum
 from django.template.loader import render_to_string
+from decimal import Decimal
 
 
 
@@ -589,42 +590,43 @@ def is_ajax(request):
 
 def set_line_quantity_ajax(request, id, quantity):
     if request.method == 'POST' and is_ajax(request):
-        basket = request.basket
-        line = basket.lines.get(id=id)
-        line_total = line.price_incl_tax*quantity
-        currency = '£' if basket.currency == 'GBP' else '€'
-        total_voucher_discount = 0
-        total_offer_discount = 0
-        data = {}
+        line = request.basket.lines.get(id=id)
         if quantity > 0:
+            print(quantity, 'aaaaaaa')
             line.quantity = quantity
             line.save()
-            basket.save()
-            basket_total = round(basket.lines.aggregate( \
-                sum=Sum(F('price_incl_tax')*F('quantity'))).get('sum'), 2)
-            data['basket_total'] = round(basket_total, 2)
-            if basket.grouped_voucher_discounts:
-                total_voucher_discount += round(sum(item['discount'] \
-                    for item in basket.grouped_voucher_discounts), 2)
-                data['total_voucher_discount'] = total_voucher_discount
-            if basket.offer_discounts:
-                total_offer_discount += round(sum(item['discount'] \
-                    for item in basket.offer_discounts), 2)
-                data['total_offer_discount'] = total_offer_discount               
-            data['basket_total_incl_discounts'] = basket_total - total_voucher_discount - total_offer_discount
-            data['line_total'] = line_total
+            data = update_basket(request, {})
+            data['line_total'] = round(line.price_incl_tax*line.quantity, 2)
             data['line_id'] = line.id
-            data['currency'] = currency
         else:
             line.delete()
-            basket.refresh_from_db()
-            if basket.lines.count() == 0:
-                data['empty_basket'] = render_to_string('oscar/basket/partials/basket_content.html', {'empty_basket': True})
-            else:
-                basket_total = basket.lines.aggregate( \
-                    sum=Sum(F('price_incl_tax')*F('quantity'))).get('sum')
-                data['basket_total'] = round(basket_total, 2)
-                data['delete_line'] = True
-                data['currency'] = currency
+            data = update_basket(request, {})
+            data['delete_line'] = True
         print(data)
         return JsonResponse(data)
+    
+def update_basket(request, data):
+    currency = '£' if request.basket.currency == 'GBP' else '€'
+    strategy = request.basket.strategy
+    basket = get_model("basket", "Basket").objects.get(
+        id=request.basket.id
+    )
+    if basket.lines.count() == 0:
+        data['empty_basket'] = render_to_string('oscar/basket/partials/basket_content.html', {'empty_basket': True})
+    else:
+        basket.strategy = strategy
+        Applicator().apply(basket, request.user, request)
+        data['currency'] = currency
+        data['basket_total'] = basket.total_incl_tax_excl_discounts
+        data['basket_total_incl_discounts'] = basket.total_incl_tax
+        voucher_discounts = basket.voucher_discounts
+        if voucher_discounts:
+            for item in voucher_discounts:
+                key = 'voucher-discount-'+str(item['voucher'].id)
+                data[key] = item['discount']
+        if basket.offer_discounts:
+            for item in basket.offer_discounts:  
+                print(item)  
+                key = 'offer-discount-'+str(item['offer'].id)
+                data[key] = item['discount']
+    return data

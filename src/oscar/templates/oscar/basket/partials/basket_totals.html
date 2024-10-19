@@ -33,7 +33,7 @@
                                         <br/><small>{{ discount.description }}</small>
                                     {% endif %}
                                 </td>
-                                <td class="text-right" data-discounts="offer-discount">-{{ discount.discount|currency:basket.currency }}</td>
+                                <td class="text-right" data-discounts="offer-discount-{{discount.offer.id}}">-{{ discount.discount|currency:basket.currency }}</td>
                             </tr>
                         {% endfor %}
 
@@ -56,7 +56,7 @@
                                             </form>
                                         {% endif %}
                                     </td>
-                                    <td class="text-right" data-discounts="voucher-discount">-{{ discount.discount|currency:basket.currency }}</td>
+                                    <td class="text-right" data-discounts="voucher-discount-{{discount.voucher.id}}">-{{ discount.discount|currency:basket.currency }}</td>
                                 </tr>
                             {% endfor %}
                         {% endif %}

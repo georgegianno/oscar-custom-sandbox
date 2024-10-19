@@ -63,7 +63,19 @@
                             <div class="col-md-3">
                                 <div class="checkout-quantity">
                                     <div class="input-group {% if form.errors %}error{% endif %}">
-                                        {% render_field form.quantity  %}
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <button type="button" data-arrow="minus" 
+                                            style="width: 40px; height: 40px; background-color: #f0f0f0; border: 1px solid #ccc; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                            -
+                                            </button>
+                                                <input type="text" data-max="{{line.product.stockrecords.first.num_in_stock}}" value="{{line.quantity}}" 
+                                                    style="width: 60px; height: 40px; text-align: center; padding: 5px; border: 1px solid  #ccc; background-color: #f0f0f0; border-radius: 20px;" />
+                                                
+                                            <button type="button" data-arrow="plus" 
+                                                    style="width: 40px; height: 40px; background-color: #f0f0f0; border: 1px solid #ccc; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                                +
+                                            </button>
+                                        </div> 
                                         {% comment %}
                                             <div class="input-group-append">
                                                 <button class="btn btn-secondary" type="submit" data-loading-text="{% trans 'Updating...' %}">{% trans "Update" %}</button>
