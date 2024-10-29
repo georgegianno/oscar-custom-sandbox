@@ -38,7 +38,7 @@ class PromoForm(forms.ModelForm):
         empty_label = 'Any product'
     )
     required_amount = forms.IntegerField(
-        label="Number of products",
+        label="Minimum number of products",
         min_value=0,
         required=False,
         help_text=("Set the number of total products in basket above which the offer can be applied")
