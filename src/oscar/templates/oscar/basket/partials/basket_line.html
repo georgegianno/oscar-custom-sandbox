@@ -1,0 +1,96 @@
+{% load i18n static %}
+{% load image_tags %}
+{% load currency_filters %}
+{% load purchase_info_tags %}
+{% load widget_tweaks static promo_tags %}
+
+{% line_is_gift line as promo %}
+{% if not promo %}
+    {% purchase_info_for_line request line as session %}
+        <div class="basket-items" data-line-id="{{ line.id }}" data-product-pk="{{ product.pk }}">
+            <a href="#" data-id="{{ forloop.counter0 }}" data-action="remove">
+                <img src=" {% static 'close.png' %}" style="margin-bottom:15px">
+            </a>
+            <div class="row">
+                <div class="col-md-2">
+                    {{ form.id }}
+                    {% if product.primary_image %}
+                        <a href="{{ product.get_absolute_url }}">
+                            <img src="{% if product.primary_image and product.primary_image.original and product.primary_image.original.url %}{{ product.primary_image.original.url }}{% else %}{% static 'oscar/img/image_not_found.jpg' %}{% endif %}" 
+                                    alt="{{ product.get_title }}" class="img-thumbnail w-auto mx-auto my-0">
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="col-md-4">
+                    <h3><a href="{{ product.get_absolute_url }}">{{ line.description }}</a></h3>
+                    <p class="availability {{ session.availability.code }}">{{ session.availability.message }}</p>
+                </div>
+                <div class="col-md-3">
+                    <div class="checkout-quantity">
+                        <div class="input-group {% if form.errors %}error{% endif %}">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <button type="button" data-arrow="minus" 
+                                style="width: 40px; height: 40px; background-color: #f0f0f0; border: 1px solid #ccc; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                -
+                                </button>
+                                    <input type="text" data-max="{{line.product.stockrecords.first.num_in_stock}}" value="{{line.quantity}}" 
+                                        style="width: 60px; height: 40px; text-align: center; padding: 5px; border: 1px solid  #ccc; background-color: #f0f0f0; border-radius: 20px;" />
+                                    
+                                <button type="button" data-arrow="plus" 
+                                        style="width: 40px; height: 40px; background-color: #f0f0f0; border: 1px solid #ccc; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    +
+                                </button>
+                            </div> 
+                        </div>
+                    </div>
+                        <div class="basket-line-actions">
+                            {% if user.is_authenticated %}
+                                <a href="#" data-id="{{ forloop.counter0 }}" data-behaviours="save"><i>{% trans "Save for later" %}</i></a>
+                            {% endif %}
+                            <div style="display:none">
+                                {{ form.save_for_later }}
+                                {{ form.DELETE }}
+                            </div>
+                            {% for field_errors in form.errors.values %}
+                                {% for error in field_errors %}
+                                    <span class="error-block"><i class="fas fa-exclamation"></i> {{ error }}</span>
+                                {% endfor %}
+
+                            {% endfor %}
+                        </div>
+                </div>
+                <div class="col-md-1">
+                    {% if not line.unit_price_incl_tax and not line.unit_tax_excl_tax %}
+                        <p class="text-right">&mdash;</p>
+                    {% else %}
+                        <p class="price_color text-right">
+                            <span class="price-title d-md-none">{% trans "Price" %}:</span>
+                            {% if line.is_tax_known %}
+                                {{ line.unit_price_incl_tax|currency:line.price_currency }}
+                            {% else %}
+                                {{ line.unit_price_excl_tax|currency:line.price_currency }}
+                            {% endif %}
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="col-md-2">
+                    {% if not line.line_price_incl_tax and not line_price_excl_tax %}
+                        <p class="text-right">&mdash;</p>
+                    {% else %}
+                        <p class="price_color text-right">
+                            <span class="price-title d-md-none">{% trans "Total" %}:</span>
+                            <span data-line-price="{{ line.id }}">
+                                {% if line.is_tax_known %}
+                                    {{ line.line_price_incl_tax|currency:line.price_currency }}
+                                {% else %}
+                                    {{ line.line_price_excl_tax|currency:line.price_currency }}
+                                {% endif %}
+                            </span>
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+{% else %}
+    {% include "promo/basket_gift_line.html" %}
+{% endif %}

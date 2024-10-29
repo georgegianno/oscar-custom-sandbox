@@ -2,6 +2,8 @@ import os
 import environ
 import oscar
 import pathlib
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 env = environ.Env()
 
@@ -181,6 +183,8 @@ MIDDLEWARE = [
 
     # Ensure a valid basket is added to the request instance for every request
     'oscar.apps.basket.middleware.BasketMiddleware',
+    'oscar.apps.promo.middleware.PromoMiddleware',
+
 ]
 
 ROOT_URLCONF = 'urls'
@@ -278,6 +282,8 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.flatpages',
 
+    'oscar.apps.promo',
+    'oscar.apps.promo.promo_dashboard',
     'oscar.config.Shop',
     'oscar.apps.analytics.apps.AnalyticsConfig',
     'oscar.apps.checkout.apps.CheckoutConfig',
@@ -450,8 +456,131 @@ SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=0)
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 
-# Try and import local settings which can be used to override any of the above.
-try:
-    from settings_local import *
-except ImportError:
-    pass
+
+OSCAR_DASHBOARD_NAVIGATION = [
+    {
+        "label": _("Dashboard"),
+        "icon": "fas fa-list",
+        "url_name": "dashboard:index",
+    },
+    {
+        "label": _("Catalogue"),
+        "icon": "fas fa-sitemap",
+        "children": [
+            {
+                "label": _("Products"),
+                "url_name": "dashboard:catalogue-product-list",
+            },
+            {
+                "label": _("Product Types"),
+                "url_name": "dashboard:catalogue-class-list",
+            },
+            {
+                "label": _("Categories"),
+                "url_name": "dashboard:catalogue-category-list",
+            },
+            {
+                "label": _("Ranges"),
+                "url_name": "dashboard:range-list",
+            },
+            {
+                "label": _("Low stock alerts"),
+                "url_name": "dashboard:stock-alert-list",
+            },
+            {
+                "label": _("Options"),
+                "url_name": "dashboard:catalogue-option-list",
+            },
+            {
+                "label": _("Attribute Option Groups"),
+                "url_name": "dashboard:catalogue-attribute-option-group-list",
+            },
+        ],
+    },
+    {
+        "label": _("Fulfilment"),
+        "icon": "fas fa-shopping-cart",
+        "children": [
+            {
+                "label": _("Orders"),
+                "url_name": "dashboard:order-list",
+            },
+            {
+                "label": _("Statistics"),
+                "url_name": "dashboard:order-stats",
+            },
+            {
+                "label": _("Partners"),
+                "url_name": "dashboard:partner-list",
+            },
+            # The shipping method dashboard is disabled by default as it might
+            # be confusing. Weight-based shipping methods aren't hooked into
+            # the shipping repository by default (as it would make
+            # customising the repository slightly more difficult).
+            # {
+            #     'label': _('Shipping charges'),
+            #     'url_name': 'dashboard:shipping-method-list',
+            # },
+        ],
+    },
+    {
+        "label": _("Customers"),
+        "icon": "fas fa-users",
+        "children": [
+            {
+                "label": _("Customers"),
+                "url_name": "dashboard:users-index",
+            },
+            {
+                "label": _("Stock alert requests"),
+                "url_name": "dashboard:user-alert-list",
+            },
+        ],
+    },
+    {
+        "label": _("Offers"),
+        "icon": "fas fa-bullhorn",
+        "children": [
+            {
+                "label": _("Offers"),
+                "url_name": "dashboard:offer-list",
+            },
+            {
+                'label': _('Promo offers'),
+                'url_name': 'promo-dashboard:dashboard-promo-list',
+                'access_fn': lambda user, url_name, url_args, url_kwargs: user.is_staff,
+            },
+            {
+                "label": _("Vouchers"),
+                "url_name": "dashboard:voucher-list",
+            },
+            {
+                "label": _("Voucher Sets"),
+                "url_name": "dashboard:voucher-set-list",
+            },
+        ],
+    },
+    {
+        "label": _("Content"),
+        "icon": "fas fa-folder",
+        "children": [
+            {
+                "label": _("Pages"),
+                "url_name": "dashboard:page-list",
+            },
+            {
+                "label": _("Email templates"),
+                "url_name": "dashboard:comms-list",
+            },
+            {
+                "label": _("Reviews"),
+                "url_name": "dashboard:reviews-list",
+            },
+        ],
+    },
+    {
+        "label": _("Reports"),
+        "icon": "fas fa-chart-bar",
+        "url_name": "dashboard:reports-index",
+    },
+]

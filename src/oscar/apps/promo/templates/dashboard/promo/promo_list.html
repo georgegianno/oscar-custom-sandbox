@@ -1,0 +1,77 @@
+{% extends 'oscar/dashboard/layout.html' %}
+{% load sorting_tags i18n %}
+
+{% block title %}{{ view.title }} {% trans "Promos" %} | {{ block.super }}{% endblock title %}
+
+
+{% block breadcrumbs %}
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a>
+      </li>
+      {% if form.is_bound %}
+        <li class="breadcrumb-item">
+          <a href="{% url 'promo-dashboard:dashboard-promo-list' %}">{% trans "Promos" %}</a>
+        </li>
+      {% endif %}
+      <li class="active">{{ object.title }}</li>
+    </ol>
+  </nav>
+{% endblock breadcrumbs %}
+
+
+{% block header %}
+  <div class="page-header">
+    <a href="{% url 'promo-dashboard:dashboard-promo-create' %}" class="btn btn-primary btn-lg pull-right"><i class="icon-plus"></i> {% trans "Create new promo" %}</a>
+    <h1>{% trans "Promos" %}</h1>
+  </div>
+{% endblock header %}
+
+
+{% block dashboard_content %}
+
+  {% block promo_table %}
+    <table class="table table-striped table-bordered table-hover">
+      <caption><i class="icon-picture icon-large"></i>{% trans "Promos" %}</caption>
+      {% if object_list %}
+
+        {% block table_head %}
+          <tr>
+            <th>{% trans "Title" %}</th>
+            <th></th>
+          </tr>
+        {% endblock table_head %}
+
+        {% for promo in object_list %}
+          {% block table_row %}
+            <tr>
+              <td><a href="{% url 'promo-dashboard:dashboard-promo-update' promo.pk %}">{{ promo.title }}</a></td>
+              <td>
+                {% block row_actions %}
+                  <div class="btn-toolbar">
+                    <div class="btn-group">
+                      <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="true">
+                        {% trans "Actions" %}
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu pull-right">
+                        <li><a href="{% url 'promo-dashboard:dashboard-promo-update' promo.pk %}">{% trans "Edit" %}</a></li>
+                        <li><a href="{% url 'promo-dashboard:dashboard-promo-delete' promo.pk %}">{% trans "Delete" %}</a></li>
+                      </ul>
+                    </div>
+                  </div>
+                {% endblock row_actions %}
+              </td>
+            </tr>
+          {% endblock table_row %}
+        {% endfor %}
+
+      {% else %}
+        <tr><td>{% trans "No promos found." %}</td></tr>
+      {% endif %}
+    </table>
+  {% endblock promo_table %}
+
+  {% include "oscar/dashboard/partials/pagination.html" %}
+{% endblock dashboard_content %}

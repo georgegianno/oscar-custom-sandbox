@@ -1,0 +1,39 @@
+{% load i18n %}
+
+{% if show_progress_bar %}
+  <div id="away_from_gift" style="{% if away_from_gift_as_number > 0 and away_from_gift_as_number < gift_threshold %}display:block;{% else %}display:none;{% endif %}
+    max-width: 600px; margin: 0 auto; position: relative; top: 30px; padding: 0 1rem; margin-bottom: 60px;">
+    
+    <p style="font-size: 17px; font-weight: 300;">
+      {% if promo.cart_text %}{{ promo.cart_text }}<br>{% endif %}
+      You still have <span id="remaining">{{ away_from_gift_as_string }}</span> left to receive a gift
+    </p>
+
+    <style>
+      #progress-bar::-webkit-progress-value {
+        background-color: #8db9e6
+      }
+      #progress-bar::-moz-progress-bar {
+        background-color: #8db9e6
+      }
+    </style>
+
+    <progress id="progress-bar" max="{{ gift_threshold }}" value="{{ sum_of_valid_products_total }}" 
+              style="width: 100%; height: 20px; background-color: #e0e0e0; border-radius: 5px;">
+      <div style="width: 100%; color: #949494;">
+        <span style="width: 100%;"></span>
+      </div>
+    </progress>
+  </div>
+
+{% elif promos %}
+  <div id="away_from_gift" style="max-width: 600px; margin: 0 auto; position: relative; top: 30px; padding: 0 1rem; margin-bottom: 60px;">
+    <p style="font-size: 17px; font-weight: 300;">
+      {% for promo in promos %}
+        {% if promo.cart_text %}
+          <span>{{ promo.cart_text }}<br></span>
+        {% endif %}
+      {% endfor %}
+    </p>
+  </div>
+{% endif %}

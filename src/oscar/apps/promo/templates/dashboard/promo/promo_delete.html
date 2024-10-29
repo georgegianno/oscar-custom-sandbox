@@ -1,0 +1,37 @@
+{% extends 'oscar/dashboard/layout.html' %}
+{% load i18n %}
+
+{% block body_class %}{{ block.super }}delete-promo{% endblock body_class %}
+{% block title %}{% trans "Delete promo" %} '{{ object.title }}'? | {% trans "Promos" %} | {{ block.super }}{% endblock title%}
+{% block headertext %}{% trans "Delete promo" %} '{{ object.title }}'?{% endblock %}
+
+
+{% block breadcrumbs %}
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'dashboard:index' %}">{% trans "Dashboard" %}</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'promo-dashboard:dashboard-promo-list' %}">{% trans "Promos" %}</a>
+      </li>
+      <li class="breadcrumb-item">
+        <a href="{% url 'promo-dashboard:dashboard-promo-update' object.pk %}">{{ object }}</a>
+      </li>
+      <li class="breadcrumb-item active">{% trans "Delete?" %}</li>
+    </ol>
+  </nav>
+{% endblock breadcrumbs %}
+
+
+
+{% block dashboard_content %}
+  
+    <form action="." method="post">
+      {% csrf_token %}
+      <div class="form-actions">
+        <button class="btn btn-danger btn-lg" type="submit" data-loading-text="{% trans 'Deleting...' %}">{% trans "Delete" %}</button> {% trans "or" %}
+        <a href="{% url 'promo-dashboard:dashboard-promo-list' %}">{% trans "cancel" %}</a>
+      </div>
+    </form>
+{% endblock dashboard_content %}

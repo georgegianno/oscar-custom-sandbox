@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 from django.views import generic
 
 from oscar.core.loading import get_class, get_classes, get_model
+from oscar.apps.promo.utils import add_gift_if_needed
 
 from . import signals
 
@@ -154,6 +155,7 @@ class ShippingAddressView(CheckoutSessionMixin, generic.FormView):
         if self.request.user.is_authenticated:
             # Look up address book data
             ctx["addresses"] = self.get_available_addresses()
+            add_gift_if_needed(self.request.basket)
         return ctx
 
     def get_available_addresses(self):

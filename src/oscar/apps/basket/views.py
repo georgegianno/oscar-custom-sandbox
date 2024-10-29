@@ -13,6 +13,7 @@ from extra_views import ModelFormSetView
 from django.db.models import F, Sum
 from django.template.loader import render_to_string
 from decimal import Decimal
+from oscar.apps.promo.utils import get_promo_data, add_gift_if_needed, remove_gift_if_needed, update_basket_for_promo_if_needed
 
 
 
@@ -34,6 +35,7 @@ Repository = get_class("shipping.repository", "Repository")
 OrderTotalCalculator = get_class("checkout.calculators", "OrderTotalCalculator")
 BasketMessageGenerator = get_class("basket.utils", "BasketMessageGenerator")
 SurchargeApplicator = get_class("checkout.applicator", "SurchargeApplicator")
+Product = get_model('catalogue', 'Product')
 
 
 class BasketView(ModelFormSetView):
@@ -43,6 +45,11 @@ class BasketView(ModelFormSetView):
     form_class = BasketLineForm
     factory_kwargs = {"extra": 0, "can_delete": True}
     template_name = "oscar/basket/basket.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        basket = request.basket
+        add_gift_if_needed(basket)
+        return super().dispatch(request, *args, **kwargs)
 
     def get_formset_kwargs(self):
         kwargs = super().get_formset_kwargs()
@@ -153,6 +160,7 @@ class BasketView(ModelFormSetView):
         context["order_total"] = OrderTotalCalculator().calculate(
             self.request.basket, shipping_charge, surcharges=surcharges
         )
+        context = update_basket_for_promo_if_needed(self.request.basket, context)
         return context
 
     def get_success_url(self):
@@ -363,7 +371,6 @@ class BasketAddView(FormView):
 
     def form_valid(self, form):
         offers_before = self.request.basket.applied_offers()
-
         self.request.basket.add_product(
             form.product, form.cleaned_data["quantity"], form.cleaned_options()
         )
@@ -371,11 +378,7 @@ class BasketAddView(FormView):
         messages.success(
             self.request, self.get_success_message(form), extra_tags="safe noicon"
         )
-
-        # Check for additional offer messages
         BasketMessageGenerator().apply_messages(self.request, offers_before)
-
-        # Send signal for basket addition
         self.add_signal.send(
             sender=self,
             product=form.product,
@@ -391,12 +394,14 @@ class BasketAddView(FormView):
             currency = '£' if self.request.basket.currency == 'GBP' else '€'
             quickview = render_to_string('oscar/basket/partials/basket_quick.html', 
                 {'request':self.request})
-            return JsonResponse({
+            data = {
                 'success_message': message, 
                 'basket_total': basket_total,
                 'currency': currency,
                 'quickview': quickview
-                })
+                }
+            data = get_promo_data(self.request.basket, data)
+            return JsonResponse(data)
         return super().form_valid(form)
 
     def get_success_message(self, form):
@@ -592,7 +597,6 @@ def set_line_quantity_ajax(request, id, quantity):
     if request.method == 'POST' and is_ajax(request):
         line = request.basket.lines.get(id=id)
         if quantity > 0:
-            print(quantity, 'aaaaaaa')
             line.quantity = quantity
             line.save()
             data = update_basket(request, {})
@@ -602,7 +606,6 @@ def set_line_quantity_ajax(request, id, quantity):
             line.delete()
             data = update_basket(request, {})
             data['delete_line'] = True
-        print(data)
         return JsonResponse(data)
     
 def update_basket(request, data):
@@ -629,4 +632,6 @@ def update_basket(request, data):
                 print(item)  
                 key = 'offer-discount-'+str(item['offer'].id)
                 data[key] = item['discount']
+    data = get_promo_data(basket, data)
+    remove_gift_if_needed(basket)
     return data

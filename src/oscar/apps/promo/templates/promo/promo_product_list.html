@@ -1,0 +1,23 @@
+{% load i18n %}
+{% load static %}
+<div style="display: none;" data-list="gift_list_container" data-promo="{{ promo.id }}">
+    <p style="font-weight: bold;">{% trans "Choose your gift" %}:</p>
+    <div>
+        {% for gift in gifts %}
+            <label title="{{ gift.pk }}" style="display: inline-block; margin: 10px; text-align: center;">
+                <input type="radio" name="select_your_gift" value="{{ gift.pk }}" style="margin-bottom: 5px;" />
+                {% if gift.primary_image %}
+                    <a href="#">
+                        <img src="{% if gift.primary_image.original.url %}{{ gift.primary_image.original.url }}{% else %}{% static 'oscar/img/image_not_found.jpg' %}{% endif %}"
+                             alt="{{ gift.get_title }}" style="width: 180px; height: 180px; object-fit: cover; display: block; margin: 5px auto;" />
+                    </a>
+                {% endif %}
+                <h3 style="font-size: 14px; font-weight: normal; margin-top: 5px;">
+                    {% if gift.description %}
+                        {{ gift.description }}
+                    {% endif %}
+                </h3>
+            </label>
+        {% endfor %}
+    </div>
+</div>
