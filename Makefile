@@ -36,5 +36,4 @@ venv: ## Create a virtual env and install test and production requirements
 sandbox: 
 	pip install --upgrade pip 
 	pip install -r requirements.txt
-	@echo "Run this command to finish sandbox setup"
-	export PYTHONPATH=$(PWD)/src:\$$PYTHONPATH
+	@echo "Successfully finished sandbox setup"

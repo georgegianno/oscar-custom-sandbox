@@ -62,7 +62,7 @@ This is a sample Django-Oscar project with some cool features.
 3. Create a virtual environment: `python -m venv virtualenv`
 4. Activate the virtual environment: `source virtualenv/bin/activate`
 5. Run the setup by executing: `make sandbox`
-6. Follow the command displayed in your terminal, then navigate to the sandbox directory: `cd sandbox`
+6. Navigate to the sandbox directory: `cd sandbox`
 7. Start the server with the command: `python manage.py runserver`
 
 - **Superuser Credentials**:
